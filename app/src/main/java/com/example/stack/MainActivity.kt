@@ -1,76 +1,60 @@
+package com.example.stack // Make sure this matches the package in your AndroidManifest.xml
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateListOf
 
-class Node(
-    val order: Int,
-    var value: Double,
-    var dependency: Dependency? = null
-) {
-    var valueChanged: (Double) -> Unit = {}
+// Definition of Node
+class Node(var order: Int, var value: Double = 0.0, var dependency: Dependency? = null)
 
-    init {
-        dependency?.nodes?.forEach { node ->
-            node.valueChanged = { updateValue() }
-        }
-        updateValue()
-    }
+// Definition of Dependency
+class Dependency(var nodes: List<Node>, var computation: (List<Double>) -> Double)
 
-    private fun updateValue() {
-        dependency?.let {
-            value = it.computation(it.nodes.map { node -> node.value })
-            valueChanged(value)
-        }
-    }
-}
+// ViewModel to manage business logic
+class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
+    val nodes = mutableStateListOf(*List(cols * rows) { i -> Node(i, kotlin.random.Random.nextDouble(1.0, 10.0)) }.toTypedArray())
 
-data class Dependency(
-    val nodes: List<Node>,
-    val computation: (List<Double>) -> Double
-)
-
-// NetworkManager, APIFetchingGridViewModel, DashboardViewModel, and other networking classes will be similar to Swift's implementation,
-// just translated into Kotlin and adapted for Android networking libraries such as Retrofit or OkHttp.
-
-@Composable
-fun GridView(viewModel: GridViewModel) {
-    val nodes by viewModel.nodes.collectAsState()
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.padding(16.dp)
-    ) {
-        nodes.forEach { node ->
-            Text(text = node.value.toString())
-        }
-    }
-}
-
-@Composable
-@Preview
-fun PreviewGridView() {
-    // Provide a mocked ViewModel or a PreviewViewModel to show a preview of the GridView.
-    // GridView(PreviewViewModel())
-}
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            Column {
-                // Your Composables here, e.g., GridView
+    fun updateNode(node: Node, value: Double) {
+        viewModelScope.launch {
+            node.value = value
+            node.dependency?.let { dependency ->
+                val values = dependency.nodes.map { it.value }
+                node.value = dependency.computation(values)
             }
         }
     }
 }
 
-// Remember to handle Android lifecycle events, network permissions, and error handling, which might be different or additional compared to iOS/Swift.
+// Main Activity
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            val viewModel = GridViewModel(6, 24)
+            GridView(viewModel)
+        }
+    }
+}
+
+// UI Component displaying the Grid
+@Composable
+fun GridView(viewModel: GridViewModel) {
+    val nodes = viewModel.nodes
+
+    // Your UI components go here, e.g., Columns and Rows to organize your nodes
+    // Use viewModel.updateNode(node, value) to trigger node updates
+}
+
+// Preview Function for visualization in Android Studio
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+    val viewModel = GridViewModel(6, 24)
+    GridView(viewModel)
+}
