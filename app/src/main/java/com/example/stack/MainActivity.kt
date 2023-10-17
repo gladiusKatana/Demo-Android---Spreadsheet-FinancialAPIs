@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -60,12 +61,12 @@ fun GridView(viewModel: GridViewModel) {
             Row {
                 for (col in 0 until viewModel.cols) {
                     val node = viewModel.nodes[row * viewModel.cols + col]
-                    val textState = remember { mutableStateOf(TextFieldValue(node.value.toString())) }
+                    var textState by remember { mutableStateOf(TextFieldValue(node.value.toString())) }
 
                     BasicTextField(
-                        value = textState.value,
+                        value = textState,
                         onValueChange = {
-                            textState.value = it
+                            textState = it
                             // Maybe here you want to parse the text as Double and update the node value
                             // For example:
                             viewModel.updateNode(node, it.text.toDoubleOrNull() ?: 0.0)
@@ -79,9 +80,10 @@ fun GridView(viewModel: GridViewModel) {
 }
 
 
+
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val viewModel = remember { GridViewModel(6, 24) }
+    val viewModel = remember { GridViewModel(3, 10) }
     GridView(viewModel)
 }
