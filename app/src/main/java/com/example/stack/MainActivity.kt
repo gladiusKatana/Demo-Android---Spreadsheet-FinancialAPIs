@@ -1,22 +1,44 @@
-package com.example.stack // Make sure this matches the package in your AndroidManifest.xml
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.mutableStateListOf
 
-// Definition of Node
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MaterialTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    val viewModel = remember { GridViewModel(6, 24) }
+                    GridView(viewModel)
+                }
+            }
+        }
+    }
+}
+
 class Node(var order: Int, var value: Double = 0.0, var dependency: Dependency? = null)
 
-// Definition of Dependency
 class Dependency(var nodes: List<Node>, var computation: (List<Double>) -> Double)
 
-// ViewModel to manage business logic
 class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
     val nodes = mutableStateListOf(*List(cols * rows) { i -> Node(i, kotlin.random.Random.nextDouble(1.0, 10.0)) }.toTypedArray())
 
@@ -31,30 +53,35 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
     }
 }
 
-// Main Activity
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            val viewModel = GridViewModel(6, 24)
-            GridView(viewModel)
+@Composable
+fun GridView(viewModel: GridViewModel) {
+    Column {
+        for (row in 0 until viewModel.rows) {
+            Row {
+                for (col in 0 until viewModel.cols) {
+                    val node = viewModel.nodes[row * viewModel.cols + col]
+                    val textState = remember { mutableStateOf(TextFieldValue(node.value.toString())) }
+
+                    BasicTextField(
+                        value = textState.value,
+                        onValueChange = {
+                            textState.value = it
+                            // Maybe here you want to parse the text as Double and update the node value
+                            // For example:
+                            viewModel.updateNode(node, it.text.toDoubleOrNull() ?: 0.0)
+                        },
+                        modifier = Modifier.background(Color.Gray) // Add your modifiers here
+                    )
+                }
+            }
         }
     }
 }
 
-// UI Component displaying the Grid
-@Composable
-fun GridView(viewModel: GridViewModel) {
-    val nodes = viewModel.nodes
 
-    // Your UI components go here, e.g., Columns and Rows to organize your nodes
-    // Use viewModel.updateNode(node, value) to trigger node updates
-}
-
-// Preview Function for visualization in Android Studio
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val viewModel = GridViewModel(6, 24)
+    val viewModel = remember { GridViewModel(6, 24) }
     GridView(viewModel)
 }
