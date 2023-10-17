@@ -61,23 +61,25 @@ fun GridView(viewModel: GridViewModel) {
             Row {
                 for (col in 0 until viewModel.cols) {
                     val node = viewModel.nodes[row * viewModel.cols + col]
-                    var textState by remember { mutableStateOf(TextFieldValue(node.value.toString())) }
+
+                    // Convert the node's value to a string with a maximum precision of 3 decimal places
+                    val roundedValue = String.format("%.3f", node.value)
+                    var textState by remember { mutableStateOf(TextFieldValue(roundedValue)) }
 
                     BasicTextField(
                         value = textState,
                         onValueChange = {
                             textState = it
-                            // Maybe here you want to parse the text as Double and update the node value
-                            // For example:
                             viewModel.updateNode(node, it.text.toDoubleOrNull() ?: 0.0)
                         },
-                        modifier = Modifier.background(Color.Gray) // Add your modifiers here
+                        modifier = Modifier.background(Color.Gray)
                     )
                 }
             }
         }
     }
 }
+
 
 
 
