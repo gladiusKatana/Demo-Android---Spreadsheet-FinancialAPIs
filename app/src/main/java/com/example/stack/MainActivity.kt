@@ -1,27 +1,27 @@
 package com.example.stack
+
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -99,19 +99,16 @@ fun GridView(viewModel: GridViewModel) {
 
                     // Convert the node's value to a string with a maximum precision of 3 decimal places
                     val roundedValue = String.format("%.3f", node.value)
-                    var textState by remember { mutableStateOf(TextFieldValue(roundedValue)) }
 
-                    BasicTextField(
-                        value = textState,
-                        onValueChange = {
-                            textState = it
-                            viewModel.updateNode(node, it.text.toDoubleOrNull() ?: 0.0)
-                        },
-                        modifier = Modifier.background(Color.Gray).clickable {
-                            // Increment node value when clicked
-                            Log.d("GridView", "Cell clicked!")
-                            viewModel.incrementNodeValue(node)
-                        }
+                    Text(
+                        text = roundedValue,
+                        modifier = Modifier
+                            .background(Color.Gray)
+                            .clickable {
+                                Log.d("GridView", "Cell clicked!")
+                                viewModel.incrementNodeValue(node)
+                            }
+                            .padding(8.dp) // This is just to give some space. Adjust as necessary.
                     )
                 }
             }
