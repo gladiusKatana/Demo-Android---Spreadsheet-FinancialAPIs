@@ -43,6 +43,16 @@ class Dependency(var nodes: List<Node>, var computation: (List<Double>) -> Doubl
 class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
     val nodes = mutableStateListOf(*List(cols * rows) { i -> Node(i, kotlin.random.Random.nextDouble(1.0, 10.0)) }.toTypedArray())
 
+    init {
+        for (i in nodes.indices) {
+            nodes[i].value = 1.0 // Set default initial values
+        }
+
+        setFormula(nodes[3], listOf(nodes[0], nodes[1])) { values ->
+            values[0] + values[1]
+        }
+    }
+
     fun updateNode(node: Node, value: Double) {
         viewModelScope.launch {
             node.value = value
@@ -50,9 +60,24 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
                 val values = dependency.nodes.map { it.value }
                 node.value = dependency.computation(values)
             }
+            // Iterate through all nodes to update dependent values
+            for (n in nodes) {
+                n.dependency?.let { dependency ->
+                    if (dependency.nodes.contains(node)) {
+                        val values = dependency.nodes.map { it.value }
+                        n.value = dependency.computation(values)
+                    }
+                }
+            }
         }
     }
+
+    private fun setFormula(node: Node, nodes: List<Node>, computation: (List<Double>) -> Double) {
+        node.dependency = Dependency(nodes, computation)
+        node.value = computation(nodes.map { it.value })
+    }
 }
+
 
 @Composable
 fun GridView(viewModel: GridViewModel) {
