@@ -1,15 +1,17 @@
 package com.example.stack
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,6 +75,13 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
         }
     }
 
+    // increment node value by 1
+    fun incrementNodeValue(node: Node) {
+        viewModelScope.launch {
+            node.value += 1
+        }
+    }
+
     private fun setFormula(node: Node, nodes: List<Node>, computation: (List<Double>) -> Double) {
         node.dependency = Dependency(nodes, computation)
         node.value = computation(nodes.map { it.value })
@@ -98,7 +107,11 @@ fun GridView(viewModel: GridViewModel) {
                             textState = it
                             viewModel.updateNode(node, it.text.toDoubleOrNull() ?: 0.0)
                         },
-                        modifier = Modifier.background(Color.Gray)
+                        modifier = Modifier.background(Color.Gray).clickable {
+                            // Increment node value when clicked
+                            Log.d("GridView", "Cell clicked!")
+                            viewModel.incrementNodeValue(node)
+                        }
                     )
                 }
             }
