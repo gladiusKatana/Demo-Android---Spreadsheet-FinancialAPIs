@@ -39,8 +39,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-class Node(var order: Int, var value: Double = 0.0, var dependency: Dependency? = null)
-
+class Node(var order: Int, value: Double = 0.0, var dependency: Dependency? = null) {
+    var value by mutableStateOf(value)  // Convert value to a MutableState
+}
 class Dependency(var nodes: List<Node>, var computation: (List<Double>) -> Double)
 
 class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
@@ -78,7 +79,7 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
     // increment node value by 1
     fun incrementNodeValue(node: Node) {
         viewModelScope.launch {
-            node.value += 1
+            node.value += 1 // Due to Kotlin's delegate syntax, this will update the MutableState
         }
     }
 
@@ -105,8 +106,8 @@ fun GridView(viewModel: GridViewModel) {
                         modifier = Modifier
                             .background(Color.Gray)
                             .clickable {
-                                Log.d("GridView", "Cell clicked!")
                                 viewModel.incrementNodeValue(node)
+                                Log.d("GridView", "Cell clicked, value = ${node.value}")
                             }
                             .padding(8.dp) // This is just to give some space. Adjust as necessary.
                     )
