@@ -97,17 +97,20 @@ fun GridView(viewModel: GridViewModel) {
             Row {
                 for (col in 0 until viewModel.cols) {
                     val node = viewModel.nodes[row * viewModel.cols + col]
-
-                    // Convert the node's value to a string with a maximum precision of 3 decimal places
                     val roundedValue = String.format("%.3f", node.value)
+                    val isDependent = node.dependency != null
 
                     Text(
                         text = roundedValue,
                         modifier = Modifier
                             .background(Color.Gray)
-                            .clickable {
-                                viewModel.incrementNodeValue(node)
-                                Log.d("GridView", "Cell clicked, value = ${node.value}")
+                            .clickable(enabled = !isDependent) {
+                                if (!isDependent) {
+                                    viewModel.incrementNodeValue(node)
+                                    Log.d("GridView", "Cell clicked, value = ${node.value}")
+                                } else {
+                                    Log.d("GridView", "Dependent cell clicked, no action taken.")
+                                }
                             }
                             .padding(8.dp) // This is just to give some space. Adjust as necessary.
                     )
