@@ -57,20 +57,14 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
         }
     }
 
-    fun updateNode(node: Node, value: Double) {
-        viewModelScope.launch {
-            node.value = value
-            node.dependency?.let { dependency ->
-                val values = dependency.nodes.map { it.value }
-                node.value = dependency.computation(values)
-            }
-            // Iterate through all nodes to update dependent values
-            for (n in nodes) {
-                n.dependency?.let { dependency ->
-                    if (dependency.nodes.contains(node)) {
-                        val values = dependency.nodes.map { it.value }
-                        n.value = dependency.computation(values)
-                    }
+    fun updateDependentNodes(ofNode: Node) {
+        val node = ofNode
+        // Iterate through all nodes to update dependent values
+        for (n in nodes) {
+            n.dependency?.let { dependency ->
+                if (dependency.nodes.contains(node)) {
+                    val values = dependency.nodes.map { it.value }
+                    n.value = dependency.computation(values)
                 }
             }
         }
@@ -81,6 +75,7 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
         viewModelScope.launch {
             node.value += 1 // Due to Kotlin's delegate syntax, this will update the MutableState
         }
+        updateDependentNodes(ofNode = node)
     }
 
     private fun setFormula(node: Node, nodes: List<Node>, computation: (List<Double>) -> Double) {
