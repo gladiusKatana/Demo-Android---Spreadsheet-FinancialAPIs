@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    val viewModel = remember { GridViewModel(6, 24) }
+                    val viewModel = remember { GridViewModel(7, 10) }
                     GridView(viewModel)
                 }
             }
@@ -85,9 +85,13 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
 
 @Composable
 fun GridView(viewModel: GridViewModel) {
-    Column {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
         for (row in 0 until viewModel.rows) {
-            Row {
+            Row(
+                modifier = Modifier.weight(1f)  // gives each cell an equal auto-fitted height
+            ) {
                 for (col in 0 until viewModel.cols) {
                     val node = viewModel.nodes[row * viewModel.cols + col]
                     val roundedValue = String.format("%.3f", node.value)
@@ -96,6 +100,7 @@ fun GridView(viewModel: GridViewModel) {
                     Text(
                         text = roundedValue,
                         modifier = Modifier
+                            .weight(1f)  // gives each cell an equal auto-fitted width
                             .background(Color.Gray)
                             .clickable(enabled = !isDependent) {
                                 if (!isDependent) {
@@ -105,7 +110,7 @@ fun GridView(viewModel: GridViewModel) {
                                     Log.d("GridView", "Dependent cell clicked, no action taken.")
                                 }
                             }
-                            .padding(8.dp) // This is just to give some space. Adjust as necessary.
+                            .padding(8.dp) // just to give some space - adjust as necessary
                     )
                 }
             }
@@ -119,6 +124,6 @@ fun GridView(viewModel: GridViewModel) {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val viewModel = remember { GridViewModel(3, 10) }
+    val viewModel = remember { GridViewModel(7, 10) }
     GridView(viewModel)
 }
