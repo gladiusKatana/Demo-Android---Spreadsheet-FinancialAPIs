@@ -11,18 +11,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,9 +26,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 // A surface container using the 'background' color from the theme
-                Surface(modifier = Modifier.fillMaxSize()) {
+                Surface(modifier = Modifier.fillMaxSize(), color = Color.Gray) {
                     val viewModel = remember { GridViewModel(7, 10) }
-                    GridView(viewModel)
+                    GridView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
                 }
             }
         }
@@ -82,11 +78,10 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
     }
 }
 
-
 @Composable
-fun GridView(viewModel: GridViewModel) {
+fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier
     ) {
         for (row in 0 until viewModel.rows) {
             Row(
@@ -118,12 +113,9 @@ fun GridView(viewModel: GridViewModel) {
     }
 }
 
-
-
-
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     val viewModel = remember { GridViewModel(7, 10) }
-    GridView(viewModel)
+    GridView(viewModel = viewModel, modifier = Modifier.fillMaxSize())
 }
