@@ -72,9 +72,7 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
 
     // increment node value by 1
     fun incrementNodeValue(node: Node) {
-        viewModelScope.launch {
-            node.value += 1 // Due to Kotlin's delegate syntax, this will update the MutableState
-        }
+        node.value += 1 // Due to Kotlin's delegate syntax, this will update the MutableState
         updateDependentNodes(ofNode = node)
     }
 
