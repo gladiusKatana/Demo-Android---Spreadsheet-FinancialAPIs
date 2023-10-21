@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
@@ -81,21 +83,21 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
 @Composable
 fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
+        modifier = modifier.fillMaxSize()
     ) {
         for (row in 0 until viewModel.rows) {
             Row(
-                modifier = Modifier.weight(1f)  // gives each cell an equal auto-fitted height
+                modifier = Modifier.weight(1f, fill = true)  // gives each cell an equal auto-fitted height and fills the entire height
             ) {
                 for (col in 0 until viewModel.cols) {
                     val node = viewModel.nodes[row * viewModel.cols + col]
                     val roundedValue = String.format("%.3f", node.value)
                     val isDependent = node.dependency != null
 
-                    Text(
-                        text = roundedValue,
+                    Box(
                         modifier = Modifier
-                            .weight(1f)  // gives each cell an equal auto-fitted width
+                            .weight(1f)
+                            .fillMaxSize()
                             .background(Color.Gray)
                             .clickable(enabled = !isDependent) {
                                 if (!isDependent) {
@@ -104,9 +106,14 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                                 } else {
                                     Log.d("GridView", "Dependent cell clicked, no action taken.")
                                 }
-                            }
-                            .padding(8.dp) // just to give some space - adjust as necessary
-                    )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = roundedValue,
+                            modifier = Modifier.padding(8.dp) // just to give some space - adjust as necessary
+                        )
+                    }
                 }
             }
         }
