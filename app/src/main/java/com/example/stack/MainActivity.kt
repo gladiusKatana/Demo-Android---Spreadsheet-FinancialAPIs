@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                    val viewModel = remember { GridViewModel(7, 10) }
+                    val viewModel = remember { GridViewModel(6, 10) }
                     GridView(viewModel = viewModel)
                 }
             }
@@ -85,7 +85,7 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
             ) {
                 for (col in 0 until viewModel.cols) {
                     val node = viewModel.nodes[row * viewModel.cols + col]
-                    val roundedValue = String.format("%.3f", node.value)
+                    val roundedValue = String.format("%.2f", node.value)
                     val isDependent = node.dependency != null
 
                     Box(
@@ -117,6 +117,6 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val viewModel = remember { GridViewModel(7, 10) }
+    val viewModel = remember { GridViewModel(6, 10) }
     GridView(viewModel = viewModel)
 }
