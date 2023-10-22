@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
+                Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFFF2F2F2)) {
                     val viewModel = remember { GridViewModel(6, 10) }
                     GridView(viewModel = viewModel)
                 }
