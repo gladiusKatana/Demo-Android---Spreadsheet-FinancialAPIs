@@ -1,3 +1,4 @@
+//MainActivity.kt (all kotlin code for the app itself is contained in this file - for now):
 package com.example.stack
 import android.os.Bundle
 import android.util.Log
