@@ -91,7 +91,7 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxSize()
-                            .background(Color(0xFFE0E0E0))
+                            .background(Color(0xFFE0E0E0)) // Neutral background color for cell
                             .clickable(enabled = !isDependent) {
                                 if (!isDependent) {
                                     viewModel.incrementNodeValue(node)
@@ -101,7 +101,9 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                     ) {
                         Text(
                             text = roundedValue,
-                            modifier = Modifier.padding(8.dp) // just to give some space - adjust as necessary
+                            modifier = Modifier.padding(8.dp), // Adjust padding as necessary
+                            style = MaterialTheme.typography.body1, // Typography style for better readability
+                            color = Color.Black // Contrasting text color
                         )
                     }
                 }
