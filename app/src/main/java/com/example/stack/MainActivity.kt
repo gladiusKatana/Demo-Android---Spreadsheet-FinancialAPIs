@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFFF2F2F2)) {
+                Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
                     val viewModel = remember { GridViewModel(6, 10) }
                     GridView(viewModel = viewModel)
                 }
@@ -76,7 +76,7 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
 @Composable
 fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize().background(Color.Blue)
     ) {
         for (row in 0 until viewModel.rows) {
             Row(
@@ -91,7 +91,7 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxSize()
-                            .background(Color.Gray)
+                            .background(Color(0xFFE0E0E0))
                             .clickable(enabled = !isDependent) {
                                 if (!isDependent) {
                                     viewModel.incrementNodeValue(node)
