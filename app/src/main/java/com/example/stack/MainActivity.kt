@@ -1,10 +1,8 @@
-//MainActivity.kt (all kotlin code for the app itself is contained in this file - for now):
 package com.example.stack
+
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
@@ -21,6 +19,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,19 +41,20 @@ class Node(var order: Int, value: Double = 0.0, var dependency: Dependency? = nu
     var value by mutableStateOf(value)
 }
 
-class Dependency(var nodes: List<Node>, var computation: (List<Double>) -> Double)
+class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
 
 class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
-    val nodes = mutableStateListOf(*List(cols * rows) { Node(it, 1.0) }.toTypedArray())
+    private val _nodes = MutableStateFlow(List(cols * rows) { Node(it, 1.0) })
+    val nodes: StateFlow<List<Node>> = _nodes
 
     init {
-        setFormula(nodes[3], listOf(nodes[0], nodes[1])) { values ->
+        setFormula(_nodes.value[3], listOf(_nodes.value[0], _nodes.value[1])) { values ->
             values[0] + values[1]
         }
     }
 
     fun updateDependentNodes(independentNode: Node) {
-        for (n in nodes) {
+        for (n in _nodes.value) {
             n.dependency?.let { dependency ->
                 if (dependency.nodes.contains(independentNode)) {
                     val values = dependency.nodes.map { it.value }
@@ -60,10 +62,11 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
                 }
             }
         }
+        _nodes.value = _nodes.value.toList() // Update the state flow with a new list instance to reflect changes.
     }
 
     fun incrementNodeValue(node: Node) {
-        node.value += 1 // Due to Kotlin's delegate syntax, this will update the MutableState
+        node.value += 1
         updateDependentNodes(independentNode = node)
     }
 
@@ -75,15 +78,17 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
 
 @Composable
 fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
+    val nodes by viewModel.nodes.collectAsState()
+
     Column(
         modifier = modifier.fillMaxSize().background(Color.Blue)
     ) {
         for (row in 0 until viewModel.rows) {
             Row(
-                modifier = Modifier.weight(1f, fill = true) // gives each cell an equal auto-fitted height and fills the entire height
+                modifier = Modifier.weight(1f, fill = true)
             ) {
                 for (col in 0 until viewModel.cols) {
-                    val node = viewModel.nodes[row * viewModel.cols + col]
+                    val node = nodes[row * viewModel.cols + col]
                     val roundedValue = String.format("%.2f", node.value)
                     val isDependent = node.dependency != null
 
@@ -91,7 +96,7 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxSize()
-                            .background(Color(0xFFE0E0E0)) // Neutral background color for cell
+                            .background(Color(0xFFE0E0E0))
                             .clickable(enabled = !isDependent) {
                                 if (!isDependent) {
                                     viewModel.incrementNodeValue(node)
@@ -101,9 +106,9 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                     ) {
                         Text(
                             text = roundedValue,
-                            modifier = Modifier.padding(8.dp), // Adjust padding as necessary
-                            style = MaterialTheme.typography.body1, // Typography style for better readability
-                            color = Color.Black // Contrasting text color
+                            modifier = Modifier.padding(8.dp),
+                            style = MaterialTheme.typography.body1,
+                            color = Color.Black
                         )
                     }
                 }
