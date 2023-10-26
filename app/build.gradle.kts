@@ -49,6 +49,8 @@ android {
 
 dependencies {
 
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.x.x")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.x.x")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1")

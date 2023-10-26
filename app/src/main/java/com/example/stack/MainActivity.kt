@@ -21,6 +21,8 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -42,21 +44,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//class Node(order: Int, initialValue: Double) {
-//    var order = order
-//    private var _valueFlow = MutableStateFlow(initialValue)
-//    val valueFlow: StateFlow<Double> = _valueFlow // External immutable access to the flow.
-//    var value: Double // Whenever the value changes, it's reflected in the flow.
-//        get() = _valueFlow.value
-//        set(newValue) {
-//            _valueFlow.value = newValue
-//        }
-//    var dependency: Dependency? = null
-//
-////    // Nested class to define Dependency
-////    data class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
-//}
-
 // Node class with reactive properties
 data class Node(val order: Int, val initialValue: Double = 0.0) {
     private val _valueFlow = MutableSharedFlow<Double>()
@@ -70,10 +57,19 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
             _valueFlow.tryEmit(newValue)
         }
 
-        var dependency: Dependency? = null
+    var formula: ((List<Double>) -> Double)? = null
+    var dependency: Dependency? = null
 
-    // Nested class to define Dependency
-//    data class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
+    fun setFormula(dependentOn: List<Node>, computation: (List<Double>) -> Double, scope: CoroutineScope) {
+        this.dependency = Dependency(dependentOn, computation)
+        formula = computation
+
+        combine(dependentOn.map { it.valueFlow }) { values ->
+            formula?.invoke(values.toList()) ?: 0.0
+        }.onEach { newValue: Double  ->
+            value = newValue
+        }.launchIn(scope)  // Launching in the provided Coroutine scope
+    }
 }
 
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
@@ -83,33 +79,13 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
     val nodes: StateFlow<List<Node>> = _nodes
 
     init {
-        setFormula(_nodes.value[3], listOf(_nodes.value[0], _nodes.value[1])) { values ->
+        _nodes.value[3].setFormula(listOf(_nodes.value[0], _nodes.value[1]), { values ->
             values[0] + values[1]
-        }
-    }
-
-    fun updateDependentNodes(independentNode: Node) {
-        for (n in _nodes.value) {
-            n.dependency?.let { dependency ->
-                if (dependency.nodes.contains(independentNode)) {
-                    val values = dependency.nodes.map { it.value }
-                    n.value = dependency.computation(values)
-                }
-            }
-        }
-        //_nodes.value = _nodes.value.toList()
-        val newList = _nodes.value.map { it.copy() }.toList()
-        _nodes.value = newList
+        }, viewModelScope)  // Passing viewModelScope here as an argument
     }
 
     fun incrementNodeValue(node: Node) {
         node.value += 1
-        updateDependentNodes(independentNode = node)
-    }
-
-    private fun setFormula(node: Node, nodes: List<Node>, computation: (List<Double>) -> Double) {
-        node.dependency = Dependency(nodes, computation)
-        node.value = computation(nodes.map { it.value })
     }
 }
 
