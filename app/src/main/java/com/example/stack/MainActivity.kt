@@ -22,6 +22,10 @@ import androidx.compose.material.Text
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,8 +41,35 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-class Node(var order: Int, value: Double = 0.0, var dependency: Dependency? = null) {
-    var value by mutableStateOf(value)
+//class Node(order: Int, initialValue: Double) {
+//    var order = order
+//    private var _valueFlow = MutableStateFlow(initialValue)
+//    val valueFlow: StateFlow<Double> = _valueFlow // External immutable access to the flow.
+//    var value: Double // Whenever the value changes, it's reflected in the flow.
+//        get() = _valueFlow.value
+//        set(newValue) {
+//            _valueFlow.value = newValue
+//        }
+//    var dependency: Dependency? = null
+//
+////    // Nested class to define Dependency
+////    data class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
+//}
+
+// Node class with reactive properties
+class Node(var order: Int, initialValue: Double = 0.0, var dependency: Dependency? = null) {
+    private val _valueFlow = MutableSharedFlow<Double>() // Hidden Flow to handle internal updates
+    val valueFlow: SharedFlow<Double> = _valueFlow // Exposed Flow for consumers to observe
+
+    var value by mutableStateOf(initialValue)
+        private set(value) { // Limit external modification
+            field = value
+            _valueFlow.tryEmit(value) // Emit value when it's changed
+        }
+
+    // Explanation: valueFlow and _valueFlow are utilized to build a reactive paradigm around our Node.
+    // While _valueFlow (MutableSharedFlow) is for internal modifications, valueFlow (SharedFlow)
+    // is exposed for other components to observe without being able to modify it directly.
 }
 
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
@@ -62,7 +93,7 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
                 }
             }
         }
-        _nodes.value = _nodes.value.toList() // Update the state flow with a new list instance to reflect changes.
+        _nodes.value = _nodes.value.toList()
     }
 
     fun incrementNodeValue(node: Node) {
