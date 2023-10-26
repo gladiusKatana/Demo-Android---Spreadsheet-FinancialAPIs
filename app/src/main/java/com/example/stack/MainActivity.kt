@@ -1,6 +1,7 @@
 package com.example.stack
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
@@ -57,19 +58,22 @@ class MainActivity : ComponentActivity() {
 //}
 
 // Node class with reactive properties
-class Node(var order: Int, initialValue: Double = 0.0, var dependency: Dependency? = null) {
-    private val _valueFlow = MutableSharedFlow<Double>() // Hidden Flow to handle internal updates
-    val valueFlow: SharedFlow<Double> = _valueFlow // Exposed Flow for consumers to observe
+data class Node(val order: Int, val initialValue: Double = 0.0) {
+    private val _valueFlow = MutableSharedFlow<Double>()
+    val valueFlow: SharedFlow<Double> = _valueFlow
 
-    var value by mutableStateOf(initialValue)
-        private set(value) { // Limit external modification
-            field = value
-            _valueFlow.tryEmit(value) // Emit value when it's changed
+    private var _value: Double = initialValue
+    var value: Double
+        get() = _value
+        set(newValue) {
+            _value = newValue
+            _valueFlow.tryEmit(newValue)
         }
 
-    // Explanation: valueFlow and _valueFlow are utilized to build a reactive paradigm around our Node.
-    // While _valueFlow (MutableSharedFlow) is for internal modifications, valueFlow (SharedFlow)
-    // is exposed for other components to observe without being able to modify it directly.
+        var dependency: Dependency? = null
+
+    // Nested class to define Dependency
+//    data class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
 }
 
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
@@ -93,7 +97,9 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
                 }
             }
         }
-        _nodes.value = _nodes.value.toList()
+        //_nodes.value = _nodes.value.toList()
+        val newList = _nodes.value.map { it.copy() }.toList()
+        _nodes.value = newList
     }
 
     fun incrementNodeValue(node: Node) {
@@ -130,6 +136,7 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                             .background(Color(0xFFE0E0E0))
                             .clickable(enabled = !isDependent) {
                                 if (!isDependent) {
+                                    Log.d("GridViewModel", "Incrementing value from ${node.value} to ${node.value + 1}")
                                     viewModel.incrementNodeValue(node)
                                 }
                             },
