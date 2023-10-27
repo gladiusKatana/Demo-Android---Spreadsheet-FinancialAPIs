@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
                     //SimpleCounter()
                     val viewModel = remember { GridViewModel(6, 10) }
-//                    SingleNodeView(viewModel = viewModel)
+                    //SingleNodeView(viewModel = viewModel)
                     GridView(viewModel = viewModel)
                 }
             }
@@ -95,7 +95,7 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
     fun incrementNodeValue(node: Node) {
         val updatedNodes = _nodes.value.toMutableList() // Create a mutable copy of the current list
         val index = updatedNodes.indexOf(node) // Find the index of the node to be updated
-        node.value += 1
+        node.updateValue(node.value + 1)
         updatedNodes[index] = node // Update the node in the list
         _nodes.value = updatedNodes // Update the entire list
         Log.d("VIEWMODEL_UPDATE", "Node list updated in ViewModel")
