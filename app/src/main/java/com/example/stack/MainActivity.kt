@@ -43,8 +43,8 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
                     //SimpleCounter()
                     val viewModel = remember { GridViewModel(6, 10) }
-                    SingleNodeView(viewModel = viewModel)
-                    //GridView(viewModel = viewModel)
+//                    SingleNodeView(viewModel = viewModel)
+                    GridView(viewModel = viewModel)
                 }
             }
         }
@@ -56,30 +56,28 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
     private val _valueFlow = MutableStateFlow<Double>(initialValue)
     val valueFlow: StateFlow<Double> = _valueFlow
 
-    private var _value: Double = initialValue
-    var value: Double
-        get() = _value
-        set(newValue) {
-            _value = newValue
-            _valueFlow.value = newValue
-            //Log.d("NODE_UPDATE", "Node $order value updated to $newValue")
-        }
+    var value by mutableStateOf(initialValue)
 
     var formula: ((List<Double>) -> Double)? = null
     var dependency: Dependency? = null
+
+    fun updateValue(newValue: Double) {
+        value = newValue
+        _valueFlow.value = newValue
+    }
 
     fun setFormula(dependentOn: List<Node>, computation: (List<Double>) -> Double, scope: CoroutineScope) {
         this.dependency = Dependency(dependentOn, computation)
         formula = computation
 
         combine(*dependentOn.map { it.valueFlow }.toTypedArray()) { values ->
-            //Log.d("FORMULA_DEBUG", "Combined values: ${values.joinToString()}")
             formula?.invoke(values.toList()) ?: 0.0
         }.onEach { newValue: Double  ->
-            value = newValue
-        }.launchIn(scope)  // Launching in the provided Coroutine scope
+            updateValue(newValue)
+        }.launchIn(scope)
     }
 }
+
 
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
 
