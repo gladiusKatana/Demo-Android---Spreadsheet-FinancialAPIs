@@ -53,12 +53,9 @@ class MainActivity : ComponentActivity() {
 
 // Node class with reactive properties
 data class Node(val order: Int, val initialValue: Double = 0.0) {
+    var value by mutableStateOf(initialValue)
     private val _valueFlow = MutableStateFlow<Double>(initialValue)
     val valueFlow: StateFlow<Double> = _valueFlow
-
-    var value by mutableStateOf(initialValue)
-
-    var formula: ((List<Double>) -> Double)? = null
     var dependency: Dependency? = null
 
     fun updateValue(newValue: Double) {
@@ -68,12 +65,11 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
 
     fun setFormula(inputNodes: List<Node>, computation: (List<Double>) -> Double, scope: CoroutineScope) {
         this.dependency = Dependency(inputNodes, computation)
-        formula = computation
 
         combine(*inputNodes.map { it.valueFlow }.toTypedArray()) { values ->
-            formula?.invoke(values.toList()) ?: 0.0
+            computation.invoke(values.toList()) // apply the formula
         }.onEach { newValue: Double ->
-            updateValue(newValue)
+            updateValue(newValue) // update the value of the node itself
         }.launchIn(scope)
     }
 }
