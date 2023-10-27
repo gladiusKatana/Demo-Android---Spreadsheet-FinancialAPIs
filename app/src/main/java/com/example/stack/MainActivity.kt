@@ -41,8 +41,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
+                    //SimpleCounter()
                     val viewModel = remember { GridViewModel(6, 10) }
-                    GridView(viewModel = viewModel)
+                    SingleNodeView(viewModel = viewModel)
+                    //GridView(viewModel = viewModel)
                 }
             }
         }
@@ -60,7 +62,7 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
         set(newValue) {
             _value = newValue
             _valueFlow.value = newValue
-            Log.d("NODE_UPDATE", "Node $order value updated to $newValue")
+            //Log.d("NODE_UPDATE", "Node $order value updated to $newValue")
         }
 
     var formula: ((List<Double>) -> Double)? = null
@@ -93,21 +95,65 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
     }
 
     fun incrementNodeValue(node: Node) {
+        val updatedNodes = _nodes.value.toMutableList() // Create a mutable copy of the current list
+        val index = updatedNodes.indexOf(node) // Find the index of the node to be updated
         node.value += 1
-        _nodes.value = _nodes.value.toList()
+        updatedNodes[index] = node // Update the node in the list
+        _nodes.value = updatedNodes // Update the entire list
         Log.d("VIEWMODEL_UPDATE", "Node list updated in ViewModel")
     }
 }
+
+@Composable
+fun SingleNodeView(viewModel: GridViewModel) {
+    val nodes by viewModel.nodes.collectAsState()
+    val node = nodes[0]
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable {
+                viewModel.incrementNodeValue(node)
+            }
+            .background(Color(0xFFE0E0E0)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Node Value: ${node.value}",
+            style = MaterialTheme.typography.body1,
+            color = Color.Black
+        )
+    }
+}
+
+
+@Composable
+fun SimpleCounter() {
+    var count by remember { mutableStateOf(0) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable {
+                count++
+            }
+            .background(Color(0xFFE0E0E0)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Count: $count",
+            style = MaterialTheme.typography.body1,
+            color = Color.Black
+        )
+    }
+}
+
 
 @Composable
 fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
     val nodes by viewModel.nodes.collectAsState()
 
     var simpleState by remember { mutableStateOf(0) }
-
-//    LaunchedEffect(nodes) {
-//        Log.d("COMPOSABLE_RECOMPOSE!", "Forced recomposition triggered!")
-//    }
 
     Log.d("COMPOSABLE_RECOMPOSE", "GridView recomposed with node values: ${nodes.map { it.value }}")
 
@@ -135,6 +181,7 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                             .fillMaxSize()
                             .background(Color(0xFFE0E0E0))
                             .clickable(enabled = !isDependent) {
+                                Log.d("BoxClick", "Box clicked: value = ${node.value}")
                                 if (!isDependent) {
                                     Log.d("GridViewModel", "Incrementing value from ${node.value} to ${node.value + 1}")
                                     viewModel.incrementNodeValue(node)
