@@ -86,10 +86,15 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
     val nodes: StateFlow<List<Node>> = _nodes
 
     init {
-        _nodes.value[3].setFormula(listOf(_nodes.value[0], _nodes.value[1]), { values ->
-            Log.d("FORMULA:", "Values: $values")
+        _nodes.value[2].setFormula(listOf(_nodes.value[0], _nodes.value[1]), { values ->
+            Log.d("FORMULA:", "Values for node 2: $values")
             values[0] + values[1]
-        }, viewModelScope)  // Passing viewModelScope here as an argument
+        }, viewModelScope)
+
+        _nodes.value[3].setFormula(listOf(_nodes.value[2]), { values ->
+            Log.d("FORMULA:", "Values for node 3: $values")
+            2 * values[0]
+        }, viewModelScope)
     }
 
     fun incrementNodeValue(node: Node) {
@@ -97,51 +102,6 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
         Log.d("VIEWMODEL_UPDATE", "Node value updated in ViewModel")
     }
 }
-
-@Composable
-fun SingleNodeView(viewModel: GridViewModel) {
-    val nodes by viewModel.nodes.collectAsState()
-    val node = nodes[0]
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable {
-                viewModel.incrementNodeValue(node)
-            }
-            .background(Color(0xFFE0E0E0)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Node Value: ${node.value}",
-            style = MaterialTheme.typography.body1,
-            color = Color.Black
-        )
-    }
-}
-
-
-@Composable
-fun SimpleCounter() {
-    var count by remember { mutableStateOf(0) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable {
-                count++
-            }
-            .background(Color(0xFFE0E0E0)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Count: $count",
-            style = MaterialTheme.typography.body1,
-            color = Color.Black
-        )
-    }
-}
-
 
 @Composable
 fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
