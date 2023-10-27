@@ -50,15 +50,15 @@ class MainActivity : ComponentActivity() {
 
 // Node class with reactive properties
 data class Node(val order: Int, val initialValue: Double = 0.0) {
-    private val _valueFlow = MutableSharedFlow<Double>()
-    val valueFlow: SharedFlow<Double> = _valueFlow
+    private val _valueFlow = MutableStateFlow<Double>(initialValue)
+    val valueFlow: StateFlow<Double> = _valueFlow
 
     private var _value: Double = initialValue
     var value: Double
         get() = _value
         set(newValue) {
             _value = newValue
-            _valueFlow.tryEmit(newValue)
+            _valueFlow.value = newValue
         }
 
     var formula: ((List<Double>) -> Double)? = null
@@ -69,6 +69,7 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
         formula = computation
 
         combine(*dependentOn.map { it.valueFlow }.toTypedArray()) { values ->
+            //Log.d("FORMULA_DEBUG", "Combined values: ${values.joinToString()}")
             formula?.invoke(values.toList()) ?: 0.0
         }.onEach { newValue: Double  ->
             value = newValue
