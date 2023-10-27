@@ -41,9 +41,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
-                    //SimpleCounter()
                     val viewModel = remember { GridViewModel(6, 10) }
-                    //SingleNodeView(viewModel = viewModel)
                     GridView(viewModel = viewModel)
                 }
             }
@@ -74,7 +72,6 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
     }
 }
 
-
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
 
 class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
@@ -83,36 +80,29 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
 
     init {
         _nodes.value[2].setFormula(listOf(_nodes.value[0], _nodes.value[1]), { values ->
-            Log.d("FORMULA:", "Values for node 2: $values")
+            //Log.d("FORMULA 1:", "Values for node 2: $values")
             values[0] + values[1]
         }, viewModelScope)
 
         _nodes.value[3].setFormula(listOf(_nodes.value[2]), { values ->
-            Log.d("FORMULA:", "Values for node 3: $values")
+            //Log.d("FORMULA 2:", "Values for node 3: $values")
             2 * values[0]
         }, viewModelScope)
     }
 
     fun incrementNodeValue(node: Node) {
         node.updateValue(node.value + 1)
-        Log.d("VIEWMODEL_UPDATE", "Node value updated in ViewModel")
+        //Log.d("VIEWMODEL_UPDATE", "Node value updated in ViewModel")
     }
 }
 
 @Composable
 fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
     val nodes by viewModel.nodes.collectAsState()
-
-    var simpleState by remember { mutableStateOf(0) }
-
-    Log.d("COMPOSABLE_RECOMPOSE", "GridView recomposed with node values: ${nodes.map { it.value }}")
+    //Log.d("COMPOSABLE_RECOMPOSE", "GridView recomposed with node values: ${nodes.map { it.value }}")
 
     Column(
         modifier = modifier
-            .clickable {
-                simpleState++
-                Log.d("INCREMENT_SIMPLE_STATE", "Incremented simpleState to: $simpleState")
-            }
             .fillMaxSize()
             .background(Color.Blue)
     ) {
@@ -131,13 +121,12 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                             .fillMaxSize()
                             .background(Color(0xFFE0E0E0))
                             .clickable(enabled = !isDependent) {
-                                Log.d("BoxClick", "Box clicked: value = ${node.value}")
+                                //Log.d("BoxClick", "Box clicked: value = ${node.value}")
                                 if (!isDependent) {
-                                    Log.d("GridViewModel", "Incrementing value from ${node.value} to ${node.value + 1}")
+                                    //Log.d("GridViewModel", "Incrementing value from ${node.value} to ${node.value + 1}")
                                     viewModel.incrementNodeValue(node)
                                 }
-                            }
-                            .graphicsLayer(clip = false),
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
