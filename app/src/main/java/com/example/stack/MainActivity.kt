@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -59,6 +60,7 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
         set(newValue) {
             _value = newValue
             _valueFlow.value = newValue
+            Log.d("NODE_UPDATE", "Node $order value updated to $newValue")
         }
 
     var formula: ((List<Double>) -> Double)? = null
@@ -92,6 +94,8 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
 
     fun incrementNodeValue(node: Node) {
         node.value += 1
+        _nodes.value = _nodes.value.toList()
+        Log.d("VIEWMODEL_UPDATE", "Node list updated in ViewModel")
     }
 }
 
@@ -99,8 +103,22 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
 fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
     val nodes by viewModel.nodes.collectAsState()
 
+    var simpleState by remember { mutableStateOf(0) }
+
+//    LaunchedEffect(nodes) {
+//        Log.d("COMPOSABLE_RECOMPOSE!", "Forced recomposition triggered!")
+//    }
+
+    Log.d("COMPOSABLE_RECOMPOSE", "GridView recomposed with node values: ${nodes.map { it.value }}")
+
     Column(
-        modifier = modifier.fillMaxSize().background(Color.Blue)
+        modifier = modifier
+            .clickable {
+                simpleState++
+                Log.d("INCREMENT_SIMPLE_STATE", "Incremented simpleState to: $simpleState")
+            }
+            .fillMaxSize()
+            .background(Color.Blue)
     ) {
         for (row in 0 until viewModel.rows) {
             Row(
@@ -121,7 +139,8 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                                     Log.d("GridViewModel", "Incrementing value from ${node.value} to ${node.value + 1}")
                                     viewModel.incrementNodeValue(node)
                                 }
-                            },
+                            }
+                            .graphicsLayer(clip = false),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
