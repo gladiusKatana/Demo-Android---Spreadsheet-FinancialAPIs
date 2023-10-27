@@ -66,11 +66,11 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
         _valueFlow.value = newValue
     }
 
-    fun setFormula(dependentOn: List<Node>, computation: (List<Double>) -> Double, scope: CoroutineScope) {
-        this.dependency = Dependency(dependentOn, computation)
+    fun setFormula(inputNodes: List<Node>, computation: (List<Double>) -> Double, scope: CoroutineScope) {
+        this.dependency = Dependency(inputNodes, computation)
         formula = computation
 
-        combine(*dependentOn.map { it.valueFlow }.toTypedArray()) { values ->
+        combine(*inputNodes.map { it.valueFlow }.toTypedArray()) { values ->
             formula?.invoke(values.toList()) ?: 0.0
         }.onEach { newValue: Double ->
             updateValue(newValue)
