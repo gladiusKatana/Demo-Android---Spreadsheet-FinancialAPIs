@@ -72,7 +72,7 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
 
         combine(*dependentOn.map { it.valueFlow }.toTypedArray()) { values ->
             formula?.invoke(values.toList()) ?: 0.0
-        }.onEach { newValue: Double  ->
+        }.onEach { newValue: Double ->
             updateValue(newValue)
         }.launchIn(scope)
     }
@@ -93,12 +93,8 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
     }
 
     fun incrementNodeValue(node: Node) {
-        val updatedNodes = _nodes.value.toMutableList() // Create a mutable copy of the current list
-        val index = updatedNodes.indexOf(node) // Find the index of the node to be updated
         node.updateValue(node.value + 1)
-        updatedNodes[index] = node // Update the node in the list
-        _nodes.value = updatedNodes // Update the entire list
-        Log.d("VIEWMODEL_UPDATE", "Node list updated in ViewModel")
+        Log.d("VIEWMODEL_UPDATE", "Node value updated in ViewModel")
     }
 }
 
