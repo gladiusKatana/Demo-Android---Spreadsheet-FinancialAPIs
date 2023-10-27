@@ -2,6 +2,7 @@ package com.example.stack
 
 import android.os.Bundle
 import android.util.Log
+
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
@@ -22,11 +23,14 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
@@ -64,7 +68,7 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
         this.dependency = Dependency(dependentOn, computation)
         formula = computation
 
-        combine(dependentOn.map { it.valueFlow }) { values ->
+        combine(*dependentOn.map { it.valueFlow }.toTypedArray()) { values ->
             formula?.invoke(values.toList()) ?: 0.0
         }.onEach { newValue: Double  ->
             value = newValue
@@ -80,6 +84,7 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
 
     init {
         _nodes.value[3].setFormula(listOf(_nodes.value[0], _nodes.value[1]), { values ->
+            Log.d("FORMULA:", "Values: $values")
             values[0] + values[1]
         }, viewModelScope)  // Passing viewModelScope here as an argument
     }
