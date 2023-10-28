@@ -78,26 +78,22 @@ class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
 
     init {
         _nodes.value[2].setFormula(listOf(_nodes.value[0], _nodes.value[1]), { values ->
-            //Log.d("FORMULA 1:", "Values for node 2: $values")
             values[0] + values[1]
         }, viewModelScope)
 
         _nodes.value[3].setFormula(listOf(_nodes.value[2]), { values ->
-            //Log.d("FORMULA 2:", "Values for node 3: $values")
             2 * values[0]
         }, viewModelScope)
     }
 
     fun incrementNodeValue(node: Node) {
         node.updateValue(node.value + 1)
-        //Log.d("VIEWMODEL_UPDATE", "Node value updated in ViewModel")
     }
 }
 
 @Composable
 fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
     val nodes by viewModel.nodes.collectAsState()
-    //Log.d("COMPOSABLE_RECOMPOSE", "GridView recomposed with node values: ${nodes.map { it.value }}")
 
     Column(
         modifier = modifier
@@ -119,11 +115,7 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                             .fillMaxSize()
                             .background(Color(0xFFE0E0E0))
                             .clickable(enabled = !isDependent) {
-                                //Log.d("BoxClick", "Box clicked: value = ${node.value}")
-                                if (!isDependent) {
-                                    //Log.d("GridViewModel", "Incrementing value from ${node.value} to ${node.value + 1}")
-                                    viewModel.incrementNodeValue(node)
-                                }
+                                viewModel.incrementNodeValue(node)
                             },
                         contentAlignment = Alignment.Center
                     ) {
