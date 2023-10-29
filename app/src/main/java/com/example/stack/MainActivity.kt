@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Query
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,11 +45,10 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
                     val retrofit = Retrofit.Builder()
-                        .baseUrl("https://your_api_base_url.com/") // Replace with your API's base URL
+                        .baseUrl("https://api.kraken.com")
                         .addConverterFactory(GsonConverterFactory.create())
                         .build()
-
-                    val service = retrofit.create(FinancialApiService::class.java)
+                    val service = retrofit.create(KrakenApiService::class.java)
                     val repository = FinancialRepository(apiService = service)
                     val viewModel = remember { GridViewModel(6, 10, repository = repository) }
                     GridView(viewModel = viewModel)
@@ -88,17 +88,17 @@ class GridViewModel(val cols: Int, val rows: Int, private val repository: Financ
     val nodes: StateFlow<List<Node>> = _nodes
 
     // New property to store fetched financial data
-    private val _financialData = MutableStateFlow<FinancialDataResponse?>(null)
-    val financialData: StateFlow<FinancialDataResponse?> = _financialData
+    private val _financialData = MutableStateFlow<TickerResponse?>(null)
+    val financialData: StateFlow<TickerResponse?> = _financialData
 
     init {
-        fetchFinancialData() // Call this if you want to fetch data when the ViewModel is initialized
+        fetchFinancialData() // fetch data when the ViewModel is initialized
     }
 
     // New function to fetch financial data
     private fun fetchFinancialData() {
         viewModelScope.launch {
-            val data = repository.getFinancialData()
+            val data = repository.getFinancialData("XBTUSD")
             _financialData.value = data
 
             // Populate the nodes (cells) with the fetched data
@@ -167,14 +167,14 @@ fun NodeView(node: Node, onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-interface FinancialApiService {
-    @GET("path_to_endpoint")
-    suspend fun fetchFinancialData(): FinancialDataResponse
+interface KrakenApiService {
+    @GET("0/public/Ticker")
+    suspend fun getTickerInfo(@Query("pair") pair: String): TickerResponse
 }
 
-class FinancialRepository(private val apiService: FinancialApiService) {
-    suspend fun getFinancialData(): FinancialDataResponse {
-        return apiService.fetchFinancialData()
+class FinancialRepository(private val apiService: KrakenApiService) {
+    suspend fun getFinancialData(pair: String): TickerResponse {
+        return apiService.getTickerInfo(pair)
     }
 }
 
@@ -182,11 +182,10 @@ class FinancialRepository(private val apiService: FinancialApiService) {
 @Composable
 fun DefaultPreview() {
     val retrofit = Retrofit.Builder()
-        .baseUrl("https://your_api_base_url.com/") // Replace with your API's base URL
+        .baseUrl("https://api.kraken.com")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
-
-    val service = retrofit.create(FinancialApiService::class.java)
+    val service = retrofit.create(KrakenApiService::class.java)
     val repository = FinancialRepository(apiService = service)
     val viewModel = remember { GridViewModel(6, 10, repository = repository) }
     GridView(viewModel = viewModel)
