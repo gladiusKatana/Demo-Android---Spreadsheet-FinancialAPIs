@@ -111,11 +111,11 @@ class GridViewModel(val cols: Int, val rows: Int, private val repository: Financ
     }
 
     private fun updateFormulas() {
-        _nodes.value[12].setFormula(listOf(_nodes.value[0]), { values ->
+        _nodes.value[1].setFormula(listOf(_nodes.value[0]), { values ->
             values[0] / 0.72
         }, viewModelScope)
 
-        _nodes.value[3].setFormula(listOf(_nodes.value[1], _nodes.value[2]), { values ->
+        _nodes.value[30].setFormula(listOf(_nodes.value[10], _nodes.value[20]), { values ->
             values[0] + values[1]
         }, viewModelScope)
     }
@@ -139,7 +139,7 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(1f, fill = true) // ensures each Row takes equal height
             ) {
                 for (col in 0 until viewModel.cols) {
-                    val node = nodes[row * viewModel.cols + col]
+                    val node = nodes[col * viewModel.rows + row]
                     NodeView(node = node, onClick = { viewModel.incrementNodeValue(node) },
                         modifier = Modifier.weight(1f, fill = true)) // ensures each Box takes equal width inside the Row
                 }
