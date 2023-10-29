@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -106,29 +107,31 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
             ) {
                 for (col in 0 until viewModel.cols) {
                     val node = nodes[row * viewModel.cols + col]
-                    val roundedValue = String.format("%.2f", node.value)
-                    val isDependent = node.dependency != null
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxSize()
-                            .background(Color(0xFFE0E0E0))
-                            .clickable(enabled = !isDependent) {
-                                viewModel.incrementNodeValue(node)
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = roundedValue,
-                            modifier = Modifier.padding(8.dp),
-                            style = MaterialTheme.typography.body1,
-                            color = Color.Black
-                        )
-                    }
+                    NodeView(node = node, onClick = { viewModel.incrementNodeValue(node) })
                 }
             }
         }
+    }
+}
+
+@Composable
+fun NodeView(node: Node, onClick: () -> Unit) {
+    val roundedValue = String.format("%.2f", node.value)
+    val isDependent = node.dependency != null
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFE0E0E0))
+            .clickable(enabled = !isDependent, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = roundedValue,
+            modifier = Modifier.padding(8.dp),
+            style = MaterialTheme.typography.body1,
+            color = Color.Black
+        )
     }
 }
 
