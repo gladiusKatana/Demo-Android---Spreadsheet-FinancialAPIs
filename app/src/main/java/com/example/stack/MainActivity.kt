@@ -101,12 +101,10 @@ class GridViewModel(val cols: Int, val rows: Int, private val repository: Financ
             val data = repository.getFinancialData("XBTUSD")
             _financialData.value = data
 
-            // Populate the nodes (cells) with the fetched data
-            _nodes.value[0].updateValue(data.someValue1) // Assuming FinancialDataResponse has a property called someValue1
-            _nodes.value[5].updateValue(data.someValue2) // Assuming FinancialDataResponse has a property called someValue2
-
-            // Update the formulas to match the iOS app
-            updateFormulas()
+            // Extract value from API response & update node value(s)
+            data.result.XXBTZUSD.c.firstOrNull()?.toDoubleOrNull()?.let { price ->
+                _nodes.value[0].updateValue(price)
+            }
         }
     }
 
@@ -177,6 +175,11 @@ class FinancialRepository(private val apiService: KrakenApiService) {
         return apiService.getTickerInfo(pair)
     }
 }
+
+data class TickerResponse(val error: List<String>, val result: KrakenResult)
+data class KrakenResult(val XXBTZUSD: KrakenBitcoin)
+data class KrakenBitcoin(val c: List<String>)
+
 
 @Preview(showBackground = true)
 @Composable
