@@ -32,6 +32,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +43,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
-                    val viewModel = remember { GridViewModel(6, 10) }
+                    val retrofit = Retrofit.Builder()
+                        .baseUrl("https://your_api_base_url.com/") // Replace with your API's base URL
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build()
+
+                    val service = retrofit.create(FinancialApiService::class.java)
+                    val repository = FinancialRepository(apiService = service)
+                    val viewModel = remember { GridViewModel(6, 10, repository = repository) }
                     GridView(viewModel = viewModel)
                 }
             }
@@ -72,17 +83,38 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
 
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
 
-class GridViewModel(val cols: Int, val rows: Int) : ViewModel() {
+class GridViewModel(val cols: Int, val rows: Int, private val repository: FinancialRepository) : ViewModel() {
     private val _nodes = MutableStateFlow(List(cols * rows) { Node(it, 1.0) })
     val nodes: StateFlow<List<Node>> = _nodes
 
+    // New property to store fetched financial data
+    private val _financialData = MutableStateFlow<FinancialDataResponse?>(null)
+    val financialData: StateFlow<FinancialDataResponse?> = _financialData
+
     init {
+        fetchFinancialData() // Call this if you want to fetch data when the ViewModel is initialized
+    }
+
+    // New function to fetch financial data
+    private fun fetchFinancialData() {
+        viewModelScope.launch {
+            val data = repository.getFinancialData()
+            _financialData.value = data
+
+            // Populate the nodes (cells) with the fetched data
+            _nodes.value[0].updateValue(data.someValue1) // Assuming FinancialDataResponse has a property called someValue1
+            _nodes.value[5].updateValue(data.someValue2) // Assuming FinancialDataResponse has a property called someValue2
+
+            // Update the formulas to match the iOS app
+            updateFormulas()
+        }
+    }
+
+    private fun updateFormulas() {
+        // Update your node dependency relationships here to match the iOS app logic
+        // Example:
         _nodes.value[2].setFormula(listOf(_nodes.value[0], _nodes.value[1]), { values ->
             values[0] + values[1]
-        }, viewModelScope)
-
-        _nodes.value[3].setFormula(listOf(_nodes.value[2]), { values ->
-            2 * values[0]
         }, viewModelScope)
     }
 
@@ -135,9 +167,27 @@ fun NodeView(node: Node, onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
+interface FinancialApiService {
+    @GET("path_to_endpoint")
+    suspend fun fetchFinancialData(): FinancialDataResponse
+}
+
+class FinancialRepository(private val apiService: FinancialApiService) {
+    suspend fun getFinancialData(): FinancialDataResponse {
+        return apiService.fetchFinancialData()
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val viewModel = remember { GridViewModel(6, 10) }
+    val retrofit = Retrofit.Builder()
+        .baseUrl("https://your_api_base_url.com/") // Replace with your API's base URL
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    val service = retrofit.create(FinancialApiService::class.java)
+    val repository = FinancialRepository(apiService = service)
+    val viewModel = remember { GridViewModel(6, 10, repository = repository) }
     GridView(viewModel = viewModel)
 }
