@@ -105,13 +105,17 @@ class GridViewModel(val cols: Int, val rows: Int, private val repository: Financ
             data.result.XXBTZUSD.c.firstOrNull()?.toDoubleOrNull()?.let { price ->
                 _nodes.value[0].updateValue(price)
             }
+
+            updateFormulas()
         }
     }
 
     private fun updateFormulas() {
-        // Update your node dependency relationships here to match the iOS app logic
-        // Example:
-        _nodes.value[2].setFormula(listOf(_nodes.value[0], _nodes.value[1]), { values ->
+        _nodes.value[12].setFormula(listOf(_nodes.value[0]), { values ->
+            values[0] / 0.72
+        }, viewModelScope)
+
+        _nodes.value[3].setFormula(listOf(_nodes.value[1], _nodes.value[2]), { values ->
             values[0] + values[1]
         }, viewModelScope)
     }
@@ -146,7 +150,7 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
 
 @Composable
 fun NodeView(node: Node, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val roundedValue = String.format("%.2f", node.value)
+    val roundedValue = if (node.value == 1.0) "." else String.format("%.2f", node.value)
     val isDependent = node.dependency != null
 
     Box(
