@@ -150,8 +150,7 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
             ) {
                 for (col in 0 until viewModel.cols) {
                     val node = nodes[col * viewModel.rows + row]
-                    NodeView(node = node, onClick = { viewModel.incrementNodeValue(node) },
-                        modifier = Modifier.weight(1f, fill = true)) // ensures each Box takes equal width inside the Row
+                    NodeView(node = node, modifier = Modifier.weight(1f, fill = true)) // ensures each Box takes equal width inside the Row
                 }
             }
         }
@@ -159,15 +158,13 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun NodeView(node: Node, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun NodeView(node: Node, modifier: Modifier = Modifier) {
     val roundedValue = if (node.value == 1.0) "." else String.format("%.2f", node.value)
-    val isDependent = node.dependency != null
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFE0E0E0))
-            .clickable(enabled = !isDependent, onClick = onClick),
+            .background(Color(0xFFE0E0E0)),
         contentAlignment = Alignment.Center
     ) {
         Text(
