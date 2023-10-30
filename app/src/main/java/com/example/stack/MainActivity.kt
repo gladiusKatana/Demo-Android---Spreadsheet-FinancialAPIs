@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,9 +50,9 @@ class MainActivity : ComponentActivity() {
                         .addConverterFactory(GsonConverterFactory.create())
                         .build()
                     val service = retrofit.create(KrakenApiService::class.java)
-                    val repository = FinancialRepository(service)
-                    val marketDataFetchingUseCase =  MarketDataFetchingUseCase(repository)
-                    val viewModel = remember { GridViewModel(6, 10, marketDataFetchingUseCase) }
+                    val repository = KrakenRepository(service)
+                    val useCase = KrakenAPIFetchingUseCase(repository)
+                    val viewModel = remember { GridViewModel(6, 10, useCase) }
                     GridView(viewModel = viewModel)
                 }
             }
@@ -87,40 +86,39 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
 
 class GridViewModel(val cols: Int, val rows: Int,
-                    private val marketDataFetchingUseCase:  MarketDataFetchingUseCase) : ViewModel() {
+                    private val krakenAPIFetchingUseCase:  KrakenAPIFetchingUseCase) : ViewModel() {
 
     private val _nodes = MutableStateFlow(List(cols * rows) { Node(it, 1.0) })
     val nodes: StateFlow<List<Node>> = _nodes
 
-    // New property to store fetched financial data
-    private val _financialData = MutableStateFlow<TickerResponse?>(null)
-    val financialData: StateFlow<TickerResponse?> = _financialData
+    private val _bitcoinPriceData = MutableStateFlow<KrakenResponse?>(null)
+    //val bitcoinPriceData: StateFlow<KrakenResponse?> = _bitcoinPriceData
+
+//    private val _forexData = MutableStateFlow<ForexResponse?>(null)
+//    //val forexData: StateFlow<ForexResponse?> = _forexData
 
     init {
-        fetchFinancialData() // fetch data when the ViewModel is initialized
-        startFetchingBitcoinPrice(interval_milliseconds = 5000)
+        fetchBitcoinPrice() // fetch data when the ViewModel is initialized
+        updateBitcoinPrice(interval_milliseconds = 5000)
     }
 
-    private fun startFetchingBitcoinPrice(interval_milliseconds: Long) {
+    private fun fetchBitcoinPrice() {
         viewModelScope.launch {
-            while (true) {
-                delay(interval_milliseconds)
-                fetchFinancialData()
-            }
-        }
-    }
-
-    private fun fetchFinancialData() {
-        viewModelScope.launch {
-            val data = marketDataFetchingUseCase.execute("XBTUSD")
-            _financialData.value = data
-
-            // Extract value from API response & update node value(s)
+            val data = krakenAPIFetchingUseCase.kraken_api_execute("XBTUSD")
+            _bitcoinPriceData.value = data
             data.result.XXBTZUSD.c.firstOrNull()?.toDoubleOrNull()?.let { price ->
                 _nodes.value[0].updateValue(price)
             }
-
             updateFormulas()
+        }
+    }
+
+    private fun updateBitcoinPrice(interval_milliseconds: Long) {
+        viewModelScope.launch {
+            while (true) {
+                delay(interval_milliseconds)
+                fetchBitcoinPrice()
+            }
         }
     }
 
@@ -128,10 +126,6 @@ class GridViewModel(val cols: Int, val rows: Int,
         _nodes.value[1].setFormula(listOf(_nodes.value[0]), { values ->
             values[0] / 0.72
         }, viewModelScope)
-    }
-
-    fun incrementNodeValue(node: Node) {
-        node.updateValue(node.value + 1)
     }
 }
 
@@ -176,26 +170,50 @@ fun NodeView(node: Node, modifier: Modifier = Modifier) {
     }
 }
 
+// KRAKEN API -------------------------------------------------------------------
+
 interface KrakenApiService {
     @GET("0/public/Ticker")
-    suspend fun getTickerInfo(@Query("pair") pair: String): TickerResponse
+    suspend fun getKrakenPrice(@Query("pair") pair: String): KrakenResponse
 }
 
-class FinancialRepository(private val apiService: KrakenApiService) {
-    suspend fun getFinancialData(pair: String): TickerResponse {
-        return apiService.getTickerInfo(pair)
+class KrakenRepository(private val apiService: KrakenApiService) {
+    suspend fun getKrakenData(pair: String): KrakenResponse {
+        return apiService.getKrakenPrice(pair)
     }
 }
 
-class MarketDataFetchingUseCase(private val repository: FinancialRepository) {
-    suspend fun execute(pair: String): TickerResponse {
-        return repository.getFinancialData(pair)
+class KrakenAPIFetchingUseCase(private val repository: KrakenRepository) {
+    suspend fun kraken_api_execute(pair: String): KrakenResponse {
+        return repository.getKrakenData(pair)
     }
 }
 
-data class TickerResponse(val error: List<String>, val result: KrakenResult)
+data class KrakenResponse(val error: List<String>, val result: KrakenResult)
 data class KrakenResult(val XXBTZUSD: KrakenBitcoin)
 data class KrakenBitcoin(val c: List<String>)
+
+// OPEN-ER API ------------------------------------------------------------------
+
+//interface OpenErApiService {
+//    @GET("/v6/latest/USD")
+//    suspend fun getForexRates(): ForexResponse
+//}
+//
+//class ForexRepository(private val apiService: OpenErApiService) {
+//    suspend fun getForexData(): ForexResponse {
+//        return apiService.getForexRates()
+//    }
+//}
+//
+//class ForexDataFetchingUseCase(private val repository: ForexRepository) {
+//    suspend fun open_er_api_execute(): ForexResponse {
+//        return repository.getForexData()
+//    }
+//}
+//
+//data class ForexResponse(val rates: Rates)
+//data class Rates(val CAD: Double?, val EUR: Double?, val JPY: Double?)
 
 
 @Preview(showBackground = true)
@@ -206,8 +224,8 @@ fun DefaultPreview() {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
     val service = retrofit.create(KrakenApiService::class.java)
-    val repository = FinancialRepository(service)
-    val marketDataFetchingUseCase =  MarketDataFetchingUseCase(repository)
+    val repository = KrakenRepository(service)
+    val marketDataFetchingUseCase =  KrakenAPIFetchingUseCase(repository)
     val viewModel = remember { GridViewModel(6, 10, marketDataFetchingUseCase) }
     GridView(viewModel = viewModel)
 }
