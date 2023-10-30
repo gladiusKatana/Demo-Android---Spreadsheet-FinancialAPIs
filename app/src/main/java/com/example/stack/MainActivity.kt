@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -93,6 +94,16 @@ class GridViewModel(val cols: Int, val rows: Int, private val repository: Financ
 
     init {
         fetchFinancialData() // fetch data when the ViewModel is initialized
+        startFetchingBitcoinPrice(interval_milliseconds = 5000)
+    }
+
+    private fun startFetchingBitcoinPrice(interval_milliseconds: Long) {
+        viewModelScope.launch {
+            while (true) {
+                delay(interval_milliseconds)
+                fetchFinancialData()
+            }
+        }
     }
 
     // New function to fetch financial data
