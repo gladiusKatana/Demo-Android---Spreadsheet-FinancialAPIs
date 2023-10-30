@@ -44,30 +44,34 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
-
-                    //todo: dependency-inject these properties as view model properties
-
-                    val retrofit = Retrofit.Builder()
-                        .baseUrl("https://api.kraken.com")
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build()
-                    val service = retrofit.create(KrakenApiService::class.java)
-                    val repository = KrakenRepository(service)
-                    val useCase = KrakenAPIFetchingUseCase(repository)
-
-                    val forex_retrofit = Retrofit.Builder()
-                        .baseUrl("https://open.er-api.com")
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build()
-                    val forex_service = forex_retrofit.create(OpenErApiService::class.java)
-                    val forex_repository = ForexRepository(forex_service)
-                    val forex_useCase = ForexDataFetchingUseCase(forex_repository)
-
-                    val viewModel = remember { GridViewModel(6, 10, useCase, forex_useCase) }
+                    val viewModel = remember {
+                        GridViewModel(6, 10,
+                            KrakenAPIFetchingUseCase(createKrakenRepository()),
+                            ForexDataFetchingUseCase(createForexRepository())
+                        )
+                    }
                     GridView(viewModel = viewModel)
                 }
             }
         }
+    }
+
+    private fun createKrakenRepository(): KrakenRepository {
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://api.kraken.com")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        val service = retrofit.create(KrakenApiService::class.java)
+        return KrakenRepository(service)
+    }
+
+    private fun createForexRepository(): ForexRepository {
+        val forex_retrofit = Retrofit.Builder()
+            .baseUrl("https://open.er-api.com")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        val forex_service = forex_retrofit.create(OpenErApiService::class.java)
+        return ForexRepository(forex_service)
     }
 }
 
