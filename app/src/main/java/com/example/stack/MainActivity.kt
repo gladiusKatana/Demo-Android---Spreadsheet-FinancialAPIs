@@ -111,7 +111,9 @@ class GridViewModel(val cols: Int, val rows: Int,
     private val _nodes = MutableStateFlow(List(cols * rows) { Node(it, 1.0) })
     val nodes: StateFlow<List<Node>> = _nodes
 
-    // StateFlow for error messages
+    private val _bitcoinPriceData = MutableStateFlow<KrakenResponse?>(null)
+    private val _forexData = MutableStateFlow<ForexResponse?>(null)
+
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
@@ -169,9 +171,6 @@ class GridViewModel(val cols: Int, val rows: Int,
             _errorMessage.value = "Error fetching Forex rate: ${e.message}"
         }
     }
-
-    private val _bitcoinPriceData = MutableStateFlow<KrakenResponse?>(null)
-    private val _forexData = MutableStateFlow<ForexResponse?>(null)
 
     private fun updateFormulas() {
         _nodes.value[1].setFormula(listOf(_nodes.value[0], _nodes.value[5]), { n ->
