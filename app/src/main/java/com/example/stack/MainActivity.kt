@@ -44,7 +44,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
+
                     //todo: dependency-inject these properties as view model properties
+
                     val retrofit = Retrofit.Builder()
                         .baseUrl("https://api.kraken.com")
                         .addConverterFactory(GsonConverterFactory.create())
@@ -52,7 +54,16 @@ class MainActivity : ComponentActivity() {
                     val service = retrofit.create(KrakenApiService::class.java)
                     val repository = KrakenRepository(service)
                     val useCase = KrakenAPIFetchingUseCase(repository)
-                    val viewModel = remember { GridViewModel(6, 10, useCase) }
+
+                    val forex_retrofit = Retrofit.Builder()
+                        .baseUrl("https://open.er-api.com")
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build()
+                    val forex_service = forex_retrofit.create(OpenErApiService::class.java)
+                    val forex_repository = ForexRepository(forex_service)
+                    val forex_useCase = ForexDataFetchingUseCase(forex_repository)
+
+                    val viewModel = remember { GridViewModel(6, 10, useCase, forex_useCase) }
                     GridView(viewModel = viewModel)
                 }
             }
@@ -86,7 +97,8 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
 
 class GridViewModel(val cols: Int, val rows: Int,
-                    private val krakenAPIFetchingUseCase:  KrakenAPIFetchingUseCase) : ViewModel() {
+                    private val krakenAPIFetchingUseCase:  KrakenAPIFetchingUseCase,
+                    private val forexDataFetchingUseCase: ForexDataFetchingUseCase) : ViewModel() {
 
     private val _nodes = MutableStateFlow(List(cols * rows) { Node(it, 1.0) })
     val nodes: StateFlow<List<Node>> = _nodes
@@ -94,12 +106,14 @@ class GridViewModel(val cols: Int, val rows: Int,
     private val _bitcoinPriceData = MutableStateFlow<KrakenResponse?>(null)
     //val bitcoinPriceData: StateFlow<KrakenResponse?> = _bitcoinPriceData
 
-//    private val _forexData = MutableStateFlow<ForexResponse?>(null)
-//    //val forexData: StateFlow<ForexResponse?> = _forexData
+    private val _forexData = MutableStateFlow<ForexResponse?>(null)
+    //val forexData: StateFlow<ForexResponse?> = _forexData
 
     init {
         fetchBitcoinPrice() // fetch data when the ViewModel is initialized
         updateBitcoinPrice(interval_milliseconds = 5000)
+        fetchForexRate()
+        updateForexRate(interval_milliseconds = 30000)
     }
 
     private fun fetchBitcoinPrice() {
@@ -108,6 +122,17 @@ class GridViewModel(val cols: Int, val rows: Int,
             _bitcoinPriceData.value = data
             data.result.XXBTZUSD.c.firstOrNull()?.toDoubleOrNull()?.let { price ->
                 _nodes.value[0].updateValue(price)
+            }
+            updateFormulas()
+        }
+    }
+
+    private fun fetchForexRate() {
+        viewModelScope.launch {
+            val data = forexDataFetchingUseCase.open_er_api_execute()
+            _forexData.value = data
+            data.rates.CAD?.let { rate ->
+                _nodes.value[5].updateValue(rate)
             }
             updateFormulas()
         }
@@ -122,9 +147,21 @@ class GridViewModel(val cols: Int, val rows: Int,
         }
     }
 
+    private fun updateForexRate(interval_milliseconds: Long) {
+        viewModelScope.launch {
+            while (true) {
+                delay(interval_milliseconds)
+                fetchForexRate()
+            }
+        }
+    }
+
     private fun updateFormulas() {
-        _nodes.value[1].setFormula(listOf(_nodes.value[0]), { values ->
-            values[0] / 0.72
+        _nodes.value[1].setFormula(listOf(_nodes.value[0], _nodes.value[5]), { n ->
+            n[0] * n[1]
+        }, viewModelScope)
+        _nodes.value[6].setFormula(listOf(_nodes.value[5]), { n ->
+            1 / n[0]
         }, viewModelScope)
     }
 }
@@ -195,25 +232,25 @@ data class KrakenBitcoin(val c: List<String>)
 
 // OPEN-ER API ------------------------------------------------------------------
 
-//interface OpenErApiService {
-//    @GET("/v6/latest/USD")
-//    suspend fun getForexRates(): ForexResponse
-//}
-//
-//class ForexRepository(private val apiService: OpenErApiService) {
-//    suspend fun getForexData(): ForexResponse {
-//        return apiService.getForexRates()
-//    }
-//}
-//
-//class ForexDataFetchingUseCase(private val repository: ForexRepository) {
-//    suspend fun open_er_api_execute(): ForexResponse {
-//        return repository.getForexData()
-//    }
-//}
-//
-//data class ForexResponse(val rates: Rates)
-//data class Rates(val CAD: Double?, val EUR: Double?, val JPY: Double?)
+interface OpenErApiService {
+    @GET("/v6/latest/USD")
+    suspend fun getForexRates(): ForexResponse
+}
+
+class ForexRepository(private val apiService: OpenErApiService) {
+    suspend fun getForexData(): ForexResponse {
+        return apiService.getForexRates()
+    }
+}
+
+class ForexDataFetchingUseCase(private val repository: ForexRepository) {
+    suspend fun open_er_api_execute(): ForexResponse {
+        return repository.getForexData()
+    }
+}
+
+data class ForexResponse(val rates: Rates)
+data class Rates(val CAD: Double?, val EUR: Double?, val JPY: Double?)
 
 
 @Preview(showBackground = true)
@@ -226,6 +263,15 @@ fun DefaultPreview() {
     val service = retrofit.create(KrakenApiService::class.java)
     val repository = KrakenRepository(service)
     val marketDataFetchingUseCase =  KrakenAPIFetchingUseCase(repository)
-    val viewModel = remember { GridViewModel(6, 10, marketDataFetchingUseCase) }
+
+    val forex_retrofit = Retrofit.Builder()
+        .baseUrl("https://open.er-api.com")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+    val forex_service = forex_retrofit.create(OpenErApiService::class.java)
+    val forex_repository = ForexRepository(forex_service)
+    val forex_useCase = ForexDataFetchingUseCase(forex_repository)
+
+    val viewModel = remember { GridViewModel(6, 10, marketDataFetchingUseCase, forex_useCase) }
     GridView(viewModel = viewModel)
 }
