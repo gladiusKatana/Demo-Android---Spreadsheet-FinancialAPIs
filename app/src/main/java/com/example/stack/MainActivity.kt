@@ -45,13 +45,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
+                    //todo: dependency-inject these properties as view model properties
                     val retrofit = Retrofit.Builder()
                         .baseUrl("https://api.kraken.com")
                         .addConverterFactory(GsonConverterFactory.create())
                         .build()
                     val service = retrofit.create(KrakenApiService::class.java)
-                    val repository = FinancialRepository(apiService = service)
-                    val viewModel = remember { GridViewModel(6, 10, repository = repository) }
+                    val repository = FinancialRepository(service)
+                    val marketDataFetchingUseCase =  MarketDataFetchingUseCase(repository)
+                    val viewModel = remember { GridViewModel(6, 10, marketDataFetchingUseCase) }
                     GridView(viewModel = viewModel)
                 }
             }
@@ -84,7 +86,9 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
 
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
 
-class GridViewModel(val cols: Int, val rows: Int, private val repository: FinancialRepository) : ViewModel() {
+class GridViewModel(val cols: Int, val rows: Int,
+                    private val marketDataFetchingUseCase:  MarketDataFetchingUseCase) : ViewModel() {
+
     private val _nodes = MutableStateFlow(List(cols * rows) { Node(it, 1.0) })
     val nodes: StateFlow<List<Node>> = _nodes
 
@@ -106,10 +110,9 @@ class GridViewModel(val cols: Int, val rows: Int, private val repository: Financ
         }
     }
 
-    // New function to fetch financial data
     private fun fetchFinancialData() {
         viewModelScope.launch {
-            val data = repository.getFinancialData("XBTUSD")
+            val data = marketDataFetchingUseCase.execute("XBTUSD")
             _financialData.value = data
 
             // Extract value from API response & update node value(s)
@@ -124,10 +127,6 @@ class GridViewModel(val cols: Int, val rows: Int, private val repository: Financ
     private fun updateFormulas() {
         _nodes.value[1].setFormula(listOf(_nodes.value[0]), { values ->
             values[0] / 0.72
-        }, viewModelScope)
-
-        _nodes.value[30].setFormula(listOf(_nodes.value[10], _nodes.value[20]), { values ->
-            values[0] + values[1]
         }, viewModelScope)
     }
 
@@ -191,6 +190,12 @@ class FinancialRepository(private val apiService: KrakenApiService) {
     }
 }
 
+class MarketDataFetchingUseCase(private val repository: FinancialRepository) {
+    suspend fun execute(pair: String): TickerResponse {
+        return repository.getFinancialData(pair)
+    }
+}
+
 data class TickerResponse(val error: List<String>, val result: KrakenResult)
 data class KrakenResult(val XXBTZUSD: KrakenBitcoin)
 data class KrakenBitcoin(val c: List<String>)
@@ -204,7 +209,8 @@ fun DefaultPreview() {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
     val service = retrofit.create(KrakenApiService::class.java)
-    val repository = FinancialRepository(apiService = service)
-    val viewModel = remember { GridViewModel(6, 10, repository = repository) }
+    val repository = FinancialRepository(service)
+    val marketDataFetchingUseCase =  MarketDataFetchingUseCase(repository)
+    val viewModel = remember { GridViewModel(6, 10, marketDataFetchingUseCase) }
     GridView(viewModel = viewModel)
 }
