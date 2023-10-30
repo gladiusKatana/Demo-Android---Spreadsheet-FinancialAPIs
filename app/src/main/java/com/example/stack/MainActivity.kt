@@ -108,10 +108,7 @@ class GridViewModel(val cols: Int, val rows: Int,
     val nodes: StateFlow<List<Node>> = _nodes
 
     private val _bitcoinPriceData = MutableStateFlow<KrakenResponse?>(null)
-    //val bitcoinPriceData: StateFlow<KrakenResponse?> = _bitcoinPriceData
-
     private val _forexData = MutableStateFlow<ForexResponse?>(null)
-    //val forexData: StateFlow<ForexResponse?> = _forexData
 
     init {
         fetchBitcoinPrice() // fetch data when the ViewModel is initialized
