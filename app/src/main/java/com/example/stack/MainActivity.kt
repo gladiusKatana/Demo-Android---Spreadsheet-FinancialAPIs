@@ -101,61 +101,55 @@ data class Node(val order: Int, val initialValue: Double = 0.0) {
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
 
 class GridViewModel(val cols: Int, val rows: Int,
-                    private val krakenAPIFetchingUseCase:  KrakenAPIFetchingUseCase,
+                    private val krakenAPIFetchingUseCase: KrakenAPIFetchingUseCase,
                     private val forexDataFetchingUseCase: ForexDataFetchingUseCase) : ViewModel() {
-
     private val _nodes = MutableStateFlow(List(cols * rows) { Node(it, 1.0) })
     val nodes: StateFlow<List<Node>> = _nodes
 
+    init {
+        viewModelScope.launch {
+            fetchInitialData()
+            initUpdate(interval_milliseconds = 5000) { fetchBitcoinPrice() }
+            initUpdate(interval_milliseconds = 30000) { fetchForexRate() }
+        }
+    }
+
+    private fun initUpdate(interval_milliseconds: Long, fetchData: suspend () -> Unit) {
+        viewModelScope.launch {
+            while (true) {
+                delay(interval_milliseconds)
+                fetchData()
+            }
+        }.invokeOnCompletion { throwable ->
+            // Handle coroutine cancellation or errors here if needed
+        }
+    }
+
+    private suspend fun fetchInitialData() {
+        fetchBitcoinPrice()
+        fetchForexRate()
+    }
+
+    private suspend fun fetchBitcoinPrice() {
+        val data = krakenAPIFetchingUseCase.kraken_api_execute("XBTUSD")
+        _bitcoinPriceData.value = data
+        data.result.XXBTZUSD.c.firstOrNull()?.toDoubleOrNull()?.let { price ->
+            _nodes.value[0].updateValue(price)
+            updateFormulas()
+        }
+    }
+
+    private suspend fun fetchForexRate() {
+        val data = forexDataFetchingUseCase.open_er_api_execute()
+        _forexData.value = data
+        data.rates.CAD?.let { rate ->
+            _nodes.value[5].updateValue(rate)
+            updateFormulas()
+        }
+    }
+
     private val _bitcoinPriceData = MutableStateFlow<KrakenResponse?>(null)
     private val _forexData = MutableStateFlow<ForexResponse?>(null)
-
-    init {
-        fetchBitcoinPrice() // fetch data when the ViewModel is initialized
-        updateBitcoinPrice(interval_milliseconds = 5000)
-        fetchForexRate()
-        updateForexRate(interval_milliseconds = 30000)
-    }
-
-    private fun fetchBitcoinPrice() {
-        viewModelScope.launch {
-            val data = krakenAPIFetchingUseCase.kraken_api_execute("XBTUSD")
-            _bitcoinPriceData.value = data
-            data.result.XXBTZUSD.c.firstOrNull()?.toDoubleOrNull()?.let { price ->
-                _nodes.value[0].updateValue(price)
-            }
-            updateFormulas()
-        }
-    }
-
-    private fun fetchForexRate() {
-        viewModelScope.launch {
-            val data = forexDataFetchingUseCase.open_er_api_execute()
-            _forexData.value = data
-            data.rates.CAD?.let { rate ->
-                _nodes.value[5].updateValue(rate)
-            }
-            updateFormulas()
-        }
-    }
-
-    private fun updateBitcoinPrice(interval_milliseconds: Long) {
-        viewModelScope.launch {
-            while (true) {
-                delay(interval_milliseconds)
-                fetchBitcoinPrice()
-            }
-        }
-    }
-
-    private fun updateForexRate(interval_milliseconds: Long) {
-        viewModelScope.launch {
-            while (true) {
-                delay(interval_milliseconds)
-                fetchForexRate()
-            }
-        }
-    }
 
     private fun updateFormulas() {
         _nodes.value[1].setFormula(listOf(_nodes.value[0], _nodes.value[5]), { n ->
@@ -166,6 +160,7 @@ class GridViewModel(val cols: Int, val rows: Int,
         }, viewModelScope)
     }
 }
+
 
 @Composable
 fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
