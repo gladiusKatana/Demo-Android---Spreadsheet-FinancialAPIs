@@ -1,6 +1,7 @@
 package com.example.stack
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -50,7 +51,13 @@ class MainActivity : ComponentActivity() {
                             ForexDataFetchingUseCase(Retrofit.Builder().createForexRepository())
                         )
                     }
+                    val errorMessage by viewModel.errorMessage.collectAsState()
                     GridView(viewModel = viewModel)
+
+                    errorMessage?.let { message ->
+                        // Show a toast message for errors
+                        Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
@@ -104,6 +111,10 @@ class GridViewModel(val cols: Int, val rows: Int,
     private val _nodes = MutableStateFlow(List(cols * rows) { Node(it, 1.0) })
     val nodes: StateFlow<List<Node>> = _nodes
 
+    // StateFlow for error messages
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
+
     init {
         viewModelScope.launch {
             fetchInitialData()
@@ -120,6 +131,9 @@ class GridViewModel(val cols: Int, val rows: Int,
             }
         }.invokeOnCompletion { throwable ->
             // Handle coroutine cancellation or errors here if needed
+            throwable?.let {
+                _errorMessage.value = "Error: ${it.message}"
+            }
         }
     }
 
@@ -129,20 +143,30 @@ class GridViewModel(val cols: Int, val rows: Int,
     }
 
     private suspend fun fetchBitcoinPrice() {
-        val data = krakenAPIFetchingUseCase.kraken_api_execute("XBTUSD")
-        _bitcoinPriceData.value = data
-        data.result.XXBTZUSD.c.firstOrNull()?.toDoubleOrNull()?.let { price ->
-            _nodes.value[0].updateValue(price)
-            updateFormulas()
+        try {
+            val data = krakenAPIFetchingUseCase.kraken_api_execute("XBTUSD")
+            _bitcoinPriceData.value = data
+            data.result.XXBTZUSD.c.firstOrNull()?.toDoubleOrNull()?.let { price ->
+                _nodes.value[0].updateValue(price)
+                updateFormulas()
+            }
+        } catch (e: Exception) {
+            // Handle the error by setting an error message
+            _errorMessage.value = "Error fetching Bitcoin price: ${e.message}"
         }
     }
 
     private suspend fun fetchForexRate() {
-        val data = forexDataFetchingUseCase.open_er_api_execute()
-        _forexData.value = data
-        data.rates.CAD?.let { rate ->
-            _nodes.value[5].updateValue(rate)
-            updateFormulas()
+        try {
+            val data = forexDataFetchingUseCase.open_er_api_execute()
+            _forexData.value = data
+            data.rates.CAD?.let { rate ->
+                _nodes.value[5].updateValue(rate)
+                updateFormulas()
+            }
+        } catch (e: Exception) {
+            // Handle the error by setting an error message
+            _errorMessage.value = "Error fetching Forex rate: ${e.message}"
         }
     }
 
