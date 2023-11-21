@@ -38,6 +38,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
+import com.example.stack.M.Node
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,29 +79,6 @@ fun Retrofit.Builder.createForexRepository(): ForexRepository {
         .build()
         .create(OpenErApiService::class.java)
         .let { ForexRepository(it) }
-}
-
-// Node class with reactive properties
-data class Node(val order: Int, val initialValue: Double = 0.0) {
-    var value by mutableStateOf(initialValue)
-    private val _valueFlow = MutableStateFlow<Double>(initialValue)
-    val valueFlow: StateFlow<Double> = _valueFlow
-    var dependency: Dependency? = null
-
-    fun updateValue(newValue: Double) {
-        value = newValue
-        _valueFlow.value = newValue
-    }
-
-    fun setFormula(inputNodes: List<Node>, computation: (List<Double>) -> Double, scope: CoroutineScope) {
-        this.dependency = Dependency(inputNodes, computation)
-
-        combine(*inputNodes.map { it.valueFlow }.toTypedArray()) { values ->
-            computation.invoke(values.toList()) // apply the formula
-        }.onEach { newValue: Double ->
-            updateValue(newValue) // update the value of the node itself
-        }.launchIn(scope)
-    }
 }
 
 class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
