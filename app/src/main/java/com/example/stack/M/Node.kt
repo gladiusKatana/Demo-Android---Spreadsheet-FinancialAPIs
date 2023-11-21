@@ -1,9 +1,7 @@
 package com.example.stack.M
-
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.example.stack.Dependency
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,8 +9,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-// Node class with reactive properties
-data class Node(val order: Int, val initialValue: Double = 0.0) {
+class Dependency(val nodes: List<Node>, val computation: (List<Double>) -> Double)
+
+data class Node(val order: Int, val initialValue: Double = 0.0) { // Node class with reactive properties
     var value by mutableStateOf(initialValue)
     private val _valueFlow = MutableStateFlow<Double>(initialValue)
     val valueFlow: StateFlow<Double> = _valueFlow
