@@ -1,11 +1,11 @@
 package com.example.stack.VM
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stack.ForexDataFetchingUseCase
-import com.example.stack.ForexResponse
-import com.example.stack.KrakenAPIFetchingUseCase
-import com.example.stack.KrakenResponse
+import com.example.stack.Networking.ForexDataFetchingUseCase
+import com.example.stack.Networking.ForexResponse
+import com.example.stack.Networking.KrakenResponse
 import com.example.stack.M.Node
+import com.example.stack.Networking.KrakenAPIFetchingUseCase            //Networking - Kraken
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
