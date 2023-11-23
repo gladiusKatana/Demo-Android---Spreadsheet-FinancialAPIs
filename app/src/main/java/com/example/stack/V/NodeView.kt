@@ -8,25 +8,25 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.stack.M.Node
 
 @Composable
 fun NodeView(node: Node, modifier: Modifier = Modifier) {
-    val roundedValue = if (node.value == 1.0) "." else String.format("%.2f", node.value)
+    val typography = MaterialTheme.typography
+    val colors = MaterialTheme.colors
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFE0E0E0)),
+            .background(colors.surface),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = roundedValue,
+            text = if (node.value == 1.0) "." else String.format("%.2f", node.value),
             modifier = Modifier.padding(8.dp),
-            style = MaterialTheme.typography.body1,
-            color = Color.Black
+            style = typography.body1,
+            color = colors.onSurface
         )
     }
 }

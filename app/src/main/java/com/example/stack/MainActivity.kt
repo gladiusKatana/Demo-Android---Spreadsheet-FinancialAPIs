@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -19,14 +18,15 @@ import com.example.stack.Networking.createForexRepository
 import com.example.stack.Networking.createKrakenRepository
 import com.example.stack.V.GridView
 import com.example.stack.VM.GridViewModel
+import com.example.stack.ui.theme.StackTheme
 import retrofit2.Retrofit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) {
+            StackTheme {
+                Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) { // Red color is temporary (Pre-Production)
                     val viewModel = remember {
                         GridViewModel(6, 10,
                             KrakenAPIFetchingUseCase(Retrofit.Builder().createKrakenRepository()),
