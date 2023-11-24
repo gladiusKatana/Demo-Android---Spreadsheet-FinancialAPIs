@@ -1,11 +1,11 @@
 package com.example.stack.VM
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.stack.M.Node
 import com.example.stack.Networking.ForexDataFetchingUseCase
 import com.example.stack.Networking.ForexResponse
+import com.example.stack.Networking.KrakenAPIFetchingUseCase
 import com.example.stack.Networking.KrakenResponse
-import com.example.stack.M.Node
-import com.example.stack.Networking.KrakenAPIFetchingUseCase            //Networking - Kraken
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,8 +13,7 @@ import kotlinx.coroutines.launch
 
 class GridViewModel(val cols: Int, val rows: Int,
                     private val krakenAPIFetchingUseCase: KrakenAPIFetchingUseCase,
-                    private val forexDataFetchingUseCase: ForexDataFetchingUseCase
-) : ViewModel() {
+                    private val forexDataFetchingUseCase: ForexDataFetchingUseCase) : ViewModel() {
     private val _nodes = MutableStateFlow(List(cols * rows) { Node(it, 1.0) })
     val nodes: StateFlow<List<Node>> = _nodes
 

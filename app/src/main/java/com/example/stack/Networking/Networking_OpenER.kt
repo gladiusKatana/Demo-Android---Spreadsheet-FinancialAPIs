@@ -1,8 +1,5 @@
 package com.example.stack.Networking
 
-import com.example.stack.Networking.ForexRepository
-import com.example.stack.Networking.ForexResponse
-import com.example.stack.Networking.OpenErApiService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET

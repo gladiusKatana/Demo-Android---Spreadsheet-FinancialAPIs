@@ -16,29 +16,31 @@ import androidx.compose.ui.platform.LocalView
 
 val black = Color.Black
 val white = Color.White
+val darkGray = Color.DarkGray
+val lightGray = Color.LightGray
 
 val DarkColors = darkColors(
-    primary = Color.DarkGray, // Primary color for your components like AppBar; matches surface
-    primaryVariant = Color.LightGray, // Lighter shade of primary, for surfaces like cards
-    secondary = Color.DarkGray, // Color for secondary components, like FABs or interactive elements
-    background = Color.Black,   // Background color for large areas of the screen; matches surface
-    surface = Color.DarkGray,   // Color for surfaces of components, like cards and menus
-    onPrimary = Color.White,    // Text/icon color on top of primary color
-    onSecondary = Color.White,  // Text/icon color on top of secondary color
-    onBackground = Color.White, // Text/icon color on top of background color
-    onSurface = Color.White,    // Text/icon color on top of surface color
+    primary = darkGray, // Primary color for your components like AppBar; matches surface
+    primaryVariant = lightGray, // Lighter shade of primary, for surfaces like cards
+    secondary = darkGray, // Color for secondary components, like FABs or interactive elements
+    background = black,   // Background color for large areas of the screen; matches surface
+    surface = darkGray,   // Color for surfaces of components, like cards and menus
+    onPrimary = white,    // Text/icon color on top of primary color
+    onSecondary = white,  // Text/icon color on top of secondary color
+    onBackground = white, // Text/icon color on top of background color
+    onSurface = white,    // Text/icon color on top of surface color
 )
 
 val LightColors = lightColors(
-    primary = Color.White, //""
-    primaryVariant = Color.LightGray, // Darker shade of primary, for surfaces like cards
-    secondary = Color.White,    //""
-    background = Color.White,   //""
-    surface = Color.White,      //""
-    onPrimary = Color.Black,    //""
-    onSecondary = Color.Black,  //""
-    onBackground = Color.Black, //""
-    onSurface = Color.Black,    //""
+    primary = white, //""
+    primaryVariant = lightGray, // Darker shade of primary, for surfaces like cards
+    secondary = white,    //""
+    background = white,   //""
+    surface = white,      //""
+    onPrimary = black,    //""
+    onSecondary = black,  //""
+    onBackground = black, //""
+    onSurface = black,    //""
 )
 
 @Composable
