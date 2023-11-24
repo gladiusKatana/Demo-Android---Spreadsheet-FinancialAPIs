@@ -18,27 +18,27 @@ val black = Color.Black
 val white = Color.White
 
 val DarkColors = darkColors(
-    primary = Color.DarkGray,               // should be same as 'surface' below
-    primaryVariant = Color.LightGray,
-    secondary = white,
-    background = black,
-    surface = Color.DarkGray,               //<-- alternative: Color.Black, (maybe make this a user setting)
-    onPrimary = black,
-    onSecondary = black,
-    onBackground = white,
-    onSurface = white,
+    primary = Color.DarkGray, // Primary color for your components like AppBar; matches surface
+    primaryVariant = Color.LightGray, // Lighter shade of primary, for surfaces like cards
+    secondary = Color.DarkGray, // Color for secondary components, like FABs or interactive elements
+    background = Color.Black,   // Background color for large areas of the screen; matches surface
+    surface = Color.DarkGray,   // Color for surfaces of components, like cards and menus
+    onPrimary = Color.White,    // Text/icon color on top of primary color
+    onSecondary = Color.White,  // Text/icon color on top of secondary color
+    onBackground = Color.White, // Text/icon color on top of background color
+    onSurface = Color.White,    // Text/icon color on top of surface color
 )
 
 val LightColors = lightColors(
-    primary = white,                        // should be same as 'surface' below
-    primaryVariant = Color.LightGray,
-    secondary = black,
-    background = white,
-    surface = white,                        //<-- alternative: Color.LightGray, (maybe make this a user setting)
-    onPrimary = white,
-    onSecondary = white,
-    onBackground = black,
-    onSurface = black,
+    primary = Color.White, //""
+    primaryVariant = Color.LightGray, // Darker shade of primary, for surfaces like cards
+    secondary = Color.White,    //""
+    background = Color.White,   //""
+    surface = Color.White,      //""
+    onPrimary = Color.Black,    //""
+    onSecondary = Color.Black,  //""
+    onBackground = Color.Black, //""
+    onSurface = Color.Black,    //""
 )
 
 @Composable
