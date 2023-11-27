@@ -2,8 +2,8 @@ package com.example.stack.V
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -16,16 +16,17 @@ import com.example.stack.M.Node
 fun NodeView(node: Node, modifier: Modifier = Modifier) {
     val typography = MaterialTheme.typography
     val colors = MaterialTheme.colors
-
+    val widthModifier = Modifier
+        .wrapContentWidth(unbounded = true)
     Box(
         modifier = modifier
-            .fillMaxSize()
+            .then(widthModifier)
+            .padding(8.dp)
             .background(colors.surface),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = if (node.value == 1.0) "." else String.format("%.2f", node.value),
-            modifier = Modifier.padding(8.dp),
             style = typography.body1,
             color = colors.onSurface
         )

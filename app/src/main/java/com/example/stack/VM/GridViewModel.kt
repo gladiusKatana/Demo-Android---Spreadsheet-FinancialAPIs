@@ -79,10 +79,10 @@ class GridViewModel(val cols: Int, val rows: Int,
     }
 
     private fun updateFormulas() {
-        _nodes.value[1].setFormula(listOf(_nodes.value[0], _nodes.value[5]), { n ->
+        _nodes.value[2].setFormula(listOf(_nodes.value[0], _nodes.value[5]), { n ->
             n[0] * n[1]
         }, viewModelScope)
-        _nodes.value[6].setFormula(listOf(_nodes.value[5]), { n ->
+        _nodes.value[7].setFormula(listOf(_nodes.value[5]), { n ->
             1 / n[0]
         }, viewModelScope)
     }

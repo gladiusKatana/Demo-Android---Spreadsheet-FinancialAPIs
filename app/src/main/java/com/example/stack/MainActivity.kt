@@ -1,17 +1,20 @@
 package com.example.stack
+
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.stack.Networking.ForexDataFetchingUseCase
 import com.example.stack.Networking.KrakenAPIFetchingUseCase
 import com.example.stack.Networking.createForexRepository
@@ -26,18 +29,34 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             StackTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = Color.Red) { // Red color is temporary (Pre-Production)
+                val configuration = LocalConfiguration.current
+                val screenWidth = configuration.screenWidthDp.dp
+                val screenHeight = configuration.screenHeightDp.dp
+
+                val horizontalPadding = screenWidth * 0.15f
+                val verticalPadding = screenHeight * 0.2f
+
+                Surface(modifier = Modifier.fillMaxSize()/*, color = Color.Red*/) {
                     val viewModel = remember {
-                        GridViewModel(6, 10,
+                        GridViewModel(
+                            4, 12,
                             KrakenAPIFetchingUseCase(Retrofit.Builder().createKrakenRepository()),
                             ForexDataFetchingUseCase(Retrofit.Builder().createForexRepository())
                         )
                     }
                     val errorMessage by viewModel.errorMessage.collectAsState()
-                    GridView(viewModel = viewModel)
+
+                    GridView(
+                        viewModel = viewModel, modifier = Modifier
+                            .padding(
+                                start = horizontalPadding,
+                                end = horizontalPadding,
+                                top = verticalPadding,
+                                //bottom = verticalPadding
+                            )
+                    )
 
                     errorMessage?.let { message ->
-                        // Show a toast message for errors
                         Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
                     }
                 }
@@ -49,9 +68,14 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val viewModel = remember { GridViewModel(6, 10,
-        KrakenAPIFetchingUseCase(Retrofit.Builder().createKrakenRepository()),
-        ForexDataFetchingUseCase(Retrofit.Builder().createForexRepository())
-    ) }
-    GridView(viewModel = viewModel)
+    StackTheme {
+        val viewModel = remember {
+            GridViewModel(
+                5, 10,
+                KrakenAPIFetchingUseCase(Retrofit.Builder().createKrakenRepository()),
+                ForexDataFetchingUseCase(Retrofit.Builder().createForexRepository())
+            )
+        }
+        GridView(viewModel = viewModel)
+    }
 }

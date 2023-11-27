@@ -9,12 +9,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
 import com.example.stack.VM.GridViewModel
 
 @Composable
 fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
     val nodes by viewModel.nodes.collectAsState()
     val colors = MaterialTheme.colors
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
     Column(
         modifier = modifier
@@ -22,12 +25,13 @@ fun GridView(viewModel: GridViewModel, modifier: Modifier = Modifier) {
             .background(colors.surface)
     ) {
         for (row in 0 until viewModel.rows) {
-            Row(
-                modifier = Modifier.weight(1f, fill = true) // ensures each Row takes equal height
-            ) {
+            Row {
                 for (col in 0 until viewModel.cols) {
                     val node = nodes[col * viewModel.rows + row]
-                    NodeView(node = node, modifier = Modifier.weight(1f, fill = true)) // ensures each Box takes equal width inside the Row
+                    NodeView(
+                        node = node,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
